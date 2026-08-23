@@ -145,7 +145,7 @@ KedgeTheme(style = style) {
 - floating pill 容器
 - 选中项 capsule 动画
 - 拖动切换
-- `LayerBackdrop` 背景采样
+- `KedgeLiquidGlassBackdropState` 背景采样包装
 - `drawBackdrop` + `blur(...)` 毛玻璃绘制
 - 高光、半透明和边缘层次
 - MD3Exp / Miuix 配色适配

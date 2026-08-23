@@ -9,7 +9,7 @@ This audit compares KernelSU's reusable Compose UI pieces with Kedge's current f
 | KernelSU area | Kedge equivalent | Notes |
 |---|---|---|
 | `FloatingBottomBar` | `KedgeLiquidGlassNavigationBar` / `KedgeLiquidGlassBottomBar` | Added with `miuix-blur-android` backdrop blur, glass highlight, moving capsule, press scale, and drag selection. |
-| Liquid backdrop source | `rememberKedgeLiquidGlassBackdrop` / `KedgeLiquidGlassBackdrop` | Provides the `LayerBackdrop` capture layer expected by `drawBackdrop`. |
+| Liquid backdrop source | `rememberKedgeLiquidGlassBackdrop` / `KedgeLiquidGlassBackdrop` | Provides Kedge's wrapper around the capture layer expected by `drawBackdrop`. |
 | `BottomBar*`, `NavigationRail*` | `KedgeNavigationBar`, `KedgeBottomBar`, `KedgeNavigationRail`, `KedgeAdaptiveScaffold` | Kedge uses generic route-based wrappers instead of app-specific pager state. |
 | `DialogMaterial`, `DialogMiuix`, `ExpressiveDialog` | `KedgeDialog`, `KedgeAlertDialog`, `KedgeDialogHost` | Generic dialogs plus confirm/loading host state. |
 | `BottomSheet` / send-log sheet pattern | `KedgeBottomSheet`, `KedgeModalBottomSheet` | Generic wrapper exists; app/domain sheets are intentionally omitted. |
@@ -49,7 +49,7 @@ KernelSU's exact glass navigation references these files:
 
 Kedge now uses `top.yukonga.miuix.kmp:miuix-blur-android` directly for backdrop capture and blur drawing:
 
-- `rememberKedgeLiquidGlassBackdrop()` creates a `LayerBackdrop`.
+- `rememberKedgeLiquidGlassBackdrop()` creates a `KedgeLiquidGlassBackdropState`.
 - `KedgeLiquidGlassBackdrop(...)` applies `Modifier.layerBackdrop(backdrop)` around a content region.
 - `KedgeLiquidGlassNavigationBar(..., backdrop = backdrop)` draws with `Modifier.drawBackdrop(...)` and `blur(...)`.
 

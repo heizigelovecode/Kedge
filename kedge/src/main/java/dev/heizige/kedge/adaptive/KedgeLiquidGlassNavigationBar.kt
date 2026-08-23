@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -81,7 +82,7 @@ fun <T> KedgeLiquidGlassNavigationBar(
     height: Dp = 64.dp,
     contentPadding: PaddingValues = PaddingValues(4.dp),
     dragSelectionEnabled: Boolean = true,
-    backdrop: LayerBackdrop? = null,
+    backdrop: KedgeLiquidGlassBackdropState? = null,
     blurEnabled: Boolean = true,
     blurRadius: Dp = 18.dp,
     colors: KedgeLiquidGlassNavigationBarColors = KedgeLiquidGlassNavigationBarDefaults.colors(),
@@ -129,7 +130,7 @@ fun <T> KedgeLiquidGlassNavigationBar(
 
     Box(
         modifier = modifier
-            .then(if (backdrop == null && blurEnabled) Modifier.layerBackdrop(resolvedBackdrop) else Modifier)
+            .then(if (backdrop == null && blurEnabled) Modifier.layerBackdrop(resolvedBackdrop.layerBackdrop) else Modifier)
             .width(IntrinsicSize.Min)
             .height(height)
             .onGloballyPositioned { barWidthPx = it.size.width.toFloat() }
@@ -159,7 +160,7 @@ fun <T> KedgeLiquidGlassNavigationBar(
                 .then(
                     if (blurEnabled) {
                         Modifier.kedgeDrawGlassBackdrop(
-                            backdrop = resolvedBackdrop,
+                            backdrop = resolvedBackdrop.layerBackdrop,
                             shape = CircleShape,
                             blurRadius = blurRadius,
                             highlight = KedgeGlassContainerHighlight,
@@ -188,7 +189,7 @@ fun <T> KedgeLiquidGlassNavigationBar(
                 .then(
                     if (blurEnabled) {
                         Modifier.kedgeDrawGlassBackdrop(
-                            backdrop = resolvedBackdrop,
+                            backdrop = resolvedBackdrop.layerBackdrop,
                             shape = CircleShape,
                             blurRadius = blurRadius * 0.55f,
                             highlight = KedgeGlassIndicatorHighlight,
@@ -235,7 +236,7 @@ fun <T> KedgeLiquidGlassBottomBar(
     height: Dp = 64.dp,
     contentPadding: PaddingValues = PaddingValues(4.dp),
     dragSelectionEnabled: Boolean = true,
-    backdrop: LayerBackdrop? = null,
+    backdrop: KedgeLiquidGlassBackdropState? = null,
     blurEnabled: Boolean = true,
     blurRadius: Dp = 18.dp,
     colors: KedgeLiquidGlassNavigationBarColors = KedgeLiquidGlassNavigationBarDefaults.colors(),
@@ -257,15 +258,23 @@ fun <T> KedgeLiquidGlassBottomBar(
 }
 
 @Composable
-fun rememberKedgeLiquidGlassBackdrop(): LayerBackdrop = rememberLayerBackdrop { drawContent() }
+fun rememberKedgeLiquidGlassBackdrop(): KedgeLiquidGlassBackdropState {
+    val layerBackdrop = rememberLayerBackdrop { drawContent() }
+    return remember(layerBackdrop) { KedgeLiquidGlassBackdropState(layerBackdrop) }
+}
+
+@Stable
+class KedgeLiquidGlassBackdropState internal constructor(
+    internal val layerBackdrop: LayerBackdrop,
+)
 
 @Composable
 fun KedgeLiquidGlassBackdrop(
     modifier: Modifier = Modifier,
-    backdrop: LayerBackdrop = rememberKedgeLiquidGlassBackdrop(),
-    content: @Composable BoxScope.(LayerBackdrop) -> Unit,
+    backdrop: KedgeLiquidGlassBackdropState = rememberKedgeLiquidGlassBackdrop(),
+    content: @Composable BoxScope.(KedgeLiquidGlassBackdropState) -> Unit,
 ) {
-    Box(modifier = modifier.layerBackdrop(backdrop)) {
+    Box(modifier = modifier.layerBackdrop(backdrop.layerBackdrop)) {
         content(backdrop)
     }
 }

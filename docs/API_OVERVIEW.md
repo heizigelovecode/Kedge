@@ -27,7 +27,8 @@ Kedge 的公开 API 按包分成五类：`theme`、`adaptive`、`components`、`
 | `KedgeBreadcrumbBar` | 面包屑导航。 |
 | `KedgeLiquidGlassNavigationBar<T>` | 液态玻璃浮动导航条。 |
 | `KedgeLiquidGlassBottomBar<T>` | 底部栏包装版液态玻璃导航。 |
-| `rememberKedgeLiquidGlassBackdrop` | 创建 `miuix-blur` 的 `LayerBackdrop`。 |
+| `rememberKedgeLiquidGlassBackdrop` | 创建 Kedge 包装后的液态玻璃 backdrop 状态。 |
+| `KedgeLiquidGlassBackdropState` | Kedge 自有 backdrop 状态类型，内部持有 Miuix blur layer，业务层无需导入 `LayerBackdrop`。 |
 | `KedgeLiquidGlassBackdrop` | 对页面内容应用 `Modifier.layerBackdrop(...)`，供液态玻璃导航采样背景。 |
 | `KedgeLiquidGlassNavigationBarColors` | 液态玻璃导航颜色配置。 |
 | `KedgeLiquidGlassNavigationBarDefaults` | 液态玻璃导航默认值。 |
