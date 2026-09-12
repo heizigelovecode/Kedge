@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.heizige.kedge"
+    namespace = "heizige.kk.kedge"
     compileSdk {
         version = release(37)
     }
@@ -72,9 +72,9 @@ afterEvaluate {
     publishing {
         publications {
             create<MavenPublication>("release") {
-                groupId = "dev.heizige"
+                groupId = "heizige.kk"
                 artifactId = "kedge"
-                version = "0.1.0"
+                version = "0.1.1"
                 from(components["release"])
             }
         }

@@ -9,7 +9,7 @@ Kedge 的目标是用一套业务层 API 覆盖 Android 原生 Compose 的两套
 
 每个组件按三层组织：
 
-1. Public Contract: `dev.heizige.kedge.*.KedgeXxx`
+1. Public Contract: `heizige.kk.kedge.*.KedgeXxx`
 2. MD3Exp Implementation: `when (LocalKedgeStyle.current == KedgeStyle.MD3Exp)` 分支，优先 Khromia，其次 Material 3 官方组件
 3. Miuix Implementation: `when (LocalKedgeStyle.current == KedgeStyle.Miuix)` 分支，优先 Miuix 官方组件，其次 Kedge 自建 HyperOS 语义组件
 

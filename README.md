@@ -30,7 +30,7 @@ Kedge 是一个专属于 Android 原生 Jetpack Compose 的统一 UI 桥接库�
 
 ## 环境要求
 
-- Android Gradle Plugin 9.2.1
+- Android Gradle Plugin 9.3.1
 - Kotlin 2.4.10
 - Java 21
 - compileSdk 37
@@ -39,7 +39,7 @@ Kedge 是一个专属于 Android 原生 Jetpack Compose 的统一 UI 桥接库�
 - Material 3 1.5.0-alpha26
 - Miuix 0.9.3
 - Miuix Blur 0.9.3
-- Khromia 1.6.4 或本地 Khromia composite build
+- Khromia 1.6.2 或本地 Khromia composite build
 
 ## 本地构建
 
@@ -66,7 +66,7 @@ Kedge 会自动检测 `../Khromia`，存在时使用 composite build 替换 `hei
 ```kotlin
 includeBuild("../Kedge") {
     dependencySubstitution {
-        substitute(module("dev.heizige:kedge")).using(project(":kedge"))
+        substitute(module("heizige.kk:kedge")).using(project(":kedge"))
     }
 }
 ```
@@ -75,7 +75,7 @@ includeBuild("../Kedge") {
 
 ```kotlin
 dependencies {
-    implementation("dev.heizige:kedge:0.1.0")
+    implementation("heizige.kk:kedge:0.1.0")
 }
 ```
 
@@ -124,7 +124,7 @@ fun App() {
 }
 ```
 
-完整示例见 [kedge/src/main/java/dev/heizige/kedge/sample/KedgeUsageExample.kt](kedge/src/main/java/dev/heizige/kedge/sample/KedgeUsageExample.kt)。
+完整示例见 [kedge/src/main/java/heizige/kk/kedge/sample/KedgeUsageExample.kt](kedge/src/main/java/heizige/kk/kedge/sample/KedgeUsageExample.kt)。
 
 ## 文档索引
 

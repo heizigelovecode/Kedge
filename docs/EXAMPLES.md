@@ -1,6 +1,6 @@
 # 示例用法
 
-完整 showcase 位于 `kedge/src/main/java/dev/heizige/kedge/sample/KedgeUsageExample.kt`。本文档只列出最常用的接入片段。
+完整 showcase 位于 `kedge/src/main/java/heizige/kk/kedge/sample/KedgeUsageExample.kt`。本文档只列出最常用的接入片段。
 
 ## 1. 主题与 Toast Host
 

@@ -22,7 +22,7 @@ Kedge 的 `settings.gradle.kts` 会检测 `../Khromia`。如果目录存在，�
 ```kotlin
 includeBuild("../Kedge") {
     dependencySubstitution {
-        substitute(module("dev.heizige:kedge")).using(project(":kedge"))
+        substitute(module("heizige.kk:kedge")).using(project(":kedge"))
     }
 }
 ```
@@ -31,7 +31,7 @@ includeBuild("../Kedge") {
 
 ```kotlin
 dependencies {
-    implementation("dev.heizige:kedge:0.1.0")
+    implementation("heizige.kk:kedge:0.1.0")
 }
 ```
 

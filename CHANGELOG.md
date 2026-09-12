@@ -2,6 +2,19 @@
 
 All notable changes to Kedge will be documented in this file.
 
+## 0.1.1 - 2026-09-12
+
+### Added
+
+- Added `KedgeSearchAppBar`: two-row app bar with an integrated search field. MD3Exp builds on the current search APIs (`rememberContainedSearchBarState`, new collapsed `SearchBar`, `ExpandedFullScreenContainedSearchBar`); Miuix uses the stock Miuix top app bar plus `SearchBar`. The title row and the search field sit in one column with no vertical gap between them.
+- Added `KedgeTwoRowsTopAppBar` with configurable collapsed/expanded heights and an optional `windowInsets` override. MD3Exp maps to Material3 `TwoRowsTopAppBar`; Miuix falls back to the large Miuix top app bar.
+
+### Fixed
+
+- Fixed MD3 `KedgeSearchBar` gaining a phantom status-bar-height gap above the input field: the deprecated query-based `SearchBar` shim applies `SearchBarDefaults.windowInsets` (system bars) by default. The MD3 branch now uses `rememberSearchBarState` + `SearchBarDefaults.InputField`, which apply no vertical window insets while collapsed.
+- Fixed `KedgeSearchBar` consuming the caller `modifier` twice (outer box and inner search bar both applied it).
+- `KedgeSearchBar` now reserves 16dp of top spacing on MD3Exp only; the Miuix branch keeps its stock spacing.
+
 ## 0.1.0 - 2026-08-23
 
 ### Added
