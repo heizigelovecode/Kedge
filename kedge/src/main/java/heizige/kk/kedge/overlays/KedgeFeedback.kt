@@ -19,6 +19,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -166,13 +167,14 @@ fun KedgeToastPill(
     }
 
     Surface(
-        color = containerColor.copy(alpha = if (isMiuix) 0.92f else 0.87f),
+        color = containerColor,
         contentColor = contentColor,
         shape = CircleShape,
         modifier = modifier
-            .shadow(12.dp, CircleShape, clip = false)
+            .shadow(6.dp, CircleShape)
             .heightIn(min = 48.dp)
-            .widthIn(max = 320.dp),
+            .widthIn(max = 320.dp)
+            .alpha(0.95f),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
