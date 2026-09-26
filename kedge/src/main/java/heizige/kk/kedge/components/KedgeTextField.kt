@@ -25,7 +25,7 @@ import top.yukonga.miuix.kmp.basic.TextFieldDefaults as MiuixTextFieldDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 object KedgeTextFieldDefaults {
-    val Md3Shape: Shape = RoundedCornerShape(20.dp)
+    val Md3Shape: Shape = RoundedCornerShape(16.dp)
 }
 
 @Composable
@@ -193,6 +193,7 @@ private fun KedgeMiuixTextField(
                 maxLines = maxLines,
                 visualTransformation = visualTransformation,
                 interactionSource = interactionSource,
+                cornerRadius = 16.dp,
             )
         }
 
