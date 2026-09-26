@@ -6,20 +6,20 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import heizige.kk.kedge.components.KedgeButton
 import heizige.kk.kedge.components.KedgeButtonVariant
 import heizige.kk.kedge.components.KedgeCard
 import heizige.kk.kedge.components.KedgeTextButton
 import heizige.kk.kedge.theme.KedgeStyle
 import heizige.kk.kedge.theme.LocalKedgeStyle
+import heizige.kk.khromia.components.AnimatedAlertDialog
+import heizige.kk.khromia.components.AnimatedDialogWindow
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.window.WindowDialog as MiuixWindowDialog
 
@@ -32,10 +32,11 @@ fun KedgeDialog(
     summary: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    if (!show) return
-
     when (LocalKedgeStyle.current) {
-        KedgeStyle.MD3Exp -> Dialog(onDismissRequest = onDismissRequest) {
+        KedgeStyle.MD3Exp -> AnimatedDialogWindow(
+            visible = show,
+            onDismissRequest = onDismissRequest,
+        ) {
             KedgeCard(modifier = modifier) {
                 if (title != null) Text(text = title)
                 if (summary != null) Text(text = summary)
@@ -43,7 +44,7 @@ fun KedgeDialog(
             }
         }
 
-        KedgeStyle.Miuix -> MiuixWindowDialog(
+        KedgeStyle.Miuix -> if (show) MiuixWindowDialog(
             show = show,
             modifier = modifier,
             title = title,
@@ -66,10 +67,9 @@ fun KedgeAlertDialog(
     dismissText: String? = null,
     onDismiss: (() -> Unit)? = null,
 ) {
-    if (!show) return
-
     when (LocalKedgeStyle.current) {
-        KedgeStyle.MD3Exp -> AlertDialog(
+        KedgeStyle.MD3Exp -> AnimatedAlertDialog(
+            visible = show,
             onDismissRequest = onDismissRequest,
             title = { Text(title) },
             text = text?.let { { Text(it) } },
@@ -83,7 +83,7 @@ fun KedgeAlertDialog(
             },
         )
 
-        KedgeStyle.Miuix -> MiuixWindowDialog(
+        KedgeStyle.Miuix -> if (show) MiuixWindowDialog(
             show = show,
             title = title,
             summary = text,

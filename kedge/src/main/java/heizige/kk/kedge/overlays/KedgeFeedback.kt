@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator as MdCircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator as MdLinearProgressIndicator
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import heizige.kk.kedge.theme.KedgeStyle
 import heizige.kk.kedge.theme.LocalKedgeStyle
 import heizige.kk.khromia.components.GlobalToastHost
+import heizige.kk.khromia.components.shape.AutoCornersShape
 import heizige.kk.khromia.helper.Toast
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator as MiuixCircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator as MiuixInfiniteProgressIndicator
@@ -153,6 +153,7 @@ fun KedgeToastPill(
     style: KedgeStyle? = null,
 ) {
     val isMiuix = (style ?: LocalKedgeStyle.current) == KedgeStyle.Miuix
+    val shape = AutoCornersShape(32.dp)
     val containerColor = when {
         isMiuix && isError -> MiuixTheme.colorScheme.errorContainer
         isMiuix -> MiuixTheme.colorScheme.secondaryContainer
@@ -169,9 +170,14 @@ fun KedgeToastPill(
     Surface(
         color = containerColor,
         contentColor = contentColor,
-        shape = CircleShape,
+        shape = shape,
         modifier = modifier
-            .shadow(6.dp, CircleShape)
+            .shadow(
+                elevation = 6.dp,
+                shape = shape,
+                ambientColor = Color.Black,
+                spotColor = Color.Black,
+            )
             .heightIn(min = 48.dp)
             .widthIn(max = 320.dp)
             .alpha(0.95f),
