@@ -13,6 +13,7 @@ import androidx.compose.material3.IconButtonShapes
 import androidx.compose.material3.IconButton as MdIconButton
 import androidx.compose.material3.LocalContentColor as MdLocalContentColor
 import androidx.compose.material3.Button as MdButton
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.FilledTonalButton as MdFilledTonalButton
 import androidx.compose.material3.TextButton as MdTextButton
 import androidx.compose.runtime.Composable
@@ -69,6 +70,12 @@ fun KedgeButton(
     contentPadding: PaddingValues = KedgeButtonDefaults.ContentPadding,
     interactionSource: MutableInteractionSource? = null,
     shapes: ButtonShapes? = null,
+    /**
+     * MD3 配色，**只在 MD3Exp 分支生效**。收下它是为了让 MD3 调用点
+     * （`Button(colors = ButtonDefaults.buttonColors(...))`）能整体换成 Kedge 组件
+     * 而不丢自定义配色；Miuix 分支用自己那套 primary / surface 配色。
+     */
+    colors: ButtonColors? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
     when (LocalKedgeStyle.current) {
@@ -80,6 +87,7 @@ fun KedgeButton(
             contentPadding = contentPadding,
             interactionSource = interactionSource,
             shapes = shapes,
+            colors = colors,
             content = content,
         )
 
@@ -103,6 +111,7 @@ fun KedgeTextButton(
     contentPadding: PaddingValues = KedgeButtonDefaults.ContentPadding,
     interactionSource: MutableInteractionSource? = null,
     shapes: ButtonShapes? = null,
+    colors: ButtonColors? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
     KedgeButton(
@@ -113,6 +122,7 @@ fun KedgeTextButton(
         contentPadding = contentPadding,
         interactionSource = interactionSource,
         shapes = shapes,
+        colors = colors,
         content = content,
     )
 }
@@ -196,10 +206,13 @@ private fun KedgeMaterialButton(
     contentPadding: PaddingValues,
     interactionSource: MutableInteractionSource?,
     shapes: ButtonShapes?,
+    colors: ButtonColors?,
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val actualShapes = shapes ?: MdButtonDefaults.shapes()
+    // MD3 各 variant 的 colors 形参都是非空，这里给个与默认等价的兜底
+    val md3Colors = colors ?: MdButtonDefaults.buttonColors()
     val animatedModifier = modifier.pressBounce(
         interactionSource = actualInteractionSource,
         pressedScale = 0.97f,
@@ -214,6 +227,7 @@ private fun KedgeMaterialButton(
             enabled = enabled,
             contentPadding = contentPadding,
             interactionSource = actualInteractionSource,
+            colors = md3Colors,
             content = content,
         )
 
@@ -224,6 +238,7 @@ private fun KedgeMaterialButton(
             enabled = enabled,
             contentPadding = contentPadding,
             interactionSource = actualInteractionSource,
+            colors = md3Colors,
             content = content,
         )
 
@@ -234,6 +249,7 @@ private fun KedgeMaterialButton(
             enabled = enabled,
             contentPadding = contentPadding,
             interactionSource = actualInteractionSource,
+            colors = md3Colors,
             content = content,
         )
     }

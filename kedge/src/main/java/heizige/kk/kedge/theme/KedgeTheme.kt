@@ -109,7 +109,12 @@ private fun KedgeMiuixTheme(
         )
     }
 
-    MiuixTheme(controller = controller, content = content)
+    MiuixTheme(controller = controller) {
+        // 关键：Miuix 与 MaterialTheme 是两套独立主题。业务代码大量直接读
+        // MaterialTheme.colorScheme.*，不桥接就会退回 MD3 默认配色，
+        // 导致 Miuix 界面里到处漏出 MD3 颜色。
+        MiuixMaterialThemeBridge(darkTheme = darkTheme) { content() }
+    }
 }
 
 val currentKedgeStyle: KedgeStyle

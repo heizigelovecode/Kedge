@@ -1,6 +1,14 @@
 package heizige.kk.kedge.adaptive
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -34,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
@@ -49,6 +58,7 @@ import top.yukonga.miuix.kmp.basic.NavigationBarItem as MiuixNavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationRail as MiuixNavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem as MiuixNavigationRailItem
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar as MiuixSmallTopAppBar
+import top.yukonga.miuix.kmp.basic.TopAppBarDefaults as MiuixTopBarDefaults
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.basic.rememberNavigationRailState
@@ -81,6 +91,7 @@ fun KedgeTopAppBar(
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     titleContent: (@Composable () -> Unit)? = null,
+    scrollBehavior: top.yukonga.miuix.kmp.basic.ScrollBehavior? = null,
 ) {
     when (LocalKedgeStyle.current) {
         KedgeStyle.MD3Exp -> {
@@ -102,14 +113,121 @@ fun KedgeTopAppBar(
             }
         }
 
-        KedgeStyle.Miuix -> MiuixTopBarContentColor {
-            MiuixSmallTopAppBar(
-                title = title,
-                modifier = modifier,
-                subtitle = subtitle.orEmpty(),
-                navigationIcon = navigationIcon,
-                actions = actions,
-            )
+        KedgeStyle.Miuix -> {
+            // 与大标题栏一致：页面级 backdrop 存在时底色透明，露出内容产生毛玻璃。
+            val backdrop = LocalKedgePageBackdrop.current
+            MiuixTopBarContentColor {
+                if (titleContent == null) {
+                    // 无副标题：SmallTopAppBar 即可，标题就是普通单行标题。
+                    KedgeBlurredBar(backdrop = backdrop) {
+                        MiuixSmallTopAppBar(
+                            title = title,
+                            modifier = modifier,
+                            color = if (backdrop != null) {
+                                Color.Transparent
+                            } else {
+                                MiuixTheme.colorScheme.surface
+                            },
+                            navigationIcon = navigationIcon,
+                            actions = actions,
+                            scrollBehavior = scrollBehavior,
+                        )
+                    }
+                } else if (titleContent != null) {
+                    // Miuix 的 SmallTopAppBar 标题只收字符串，塞不进自定义标题槽。
+                    // 调用方（如 ChatPage 的搜索 morph）传了 titleContent 就自绘栏，
+                    // 度量沿用 Miuix SmallTopAppBar，保证与字符串标题版观感一致。
+                    KedgeMiuixCustomTitleBar(
+                        modifier = modifier,
+                        titleContent = titleContent,
+                        navigationIcon = navigationIcon,
+                        actions = actions,
+                    )
+                } else {
+                    KedgeBlurredBar(backdrop = backdrop) {
+                        MiuixSmallTopAppBar(
+                            title = title,
+                            modifier = modifier,
+                            color = if (backdrop != null) {
+                                Color.Transparent
+                            } else {
+                                MiuixTheme.colorScheme.surface
+                            },
+                            subtitle = subtitle.orEmpty(),
+                            navigationIcon = navigationIcon,
+                            actions = actions,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Miuix 风格、支持自定义标题槽的顶栏。
+ *
+ * Miuix 的 `SmallTopAppBar` / `TopAppBar` 标题参数是 `String`，无法承载
+ * 「标题 morph 成搜索框」这类自定义内容，因此调用方传了 `titleContent` 时
+ * 用这个自绘版本。度量（状态栏 inset、50dp 中心高、16dp 图标内边距、26dp 标题内边距）
+ * 与 Miuix `SmallTopAppBar` 保持一致。
+ */
+@Composable
+private fun KedgeMiuixCustomTitleBar(
+    modifier: Modifier = Modifier,
+    titleContent: @Composable () -> Unit,
+    navigationIcon: @Composable () -> Unit,
+    actions: @Composable RowScope.() -> Unit,
+    large: Boolean = false,
+) {
+    val backdrop = LocalKedgePageBackdrop.current
+    KedgeBlurredBar(backdrop = backdrop) {
+        MiuixTopBarContentColor {
+            // 底色必须画在 Row 本身：早先画在外层 Box 上，Box 的 inset padding
+            // 会把 Row 整体下推，两者高度不同步就会在标题区露出一条与页面背景
+            // 不同色的边（视觉上像「顶栏和背景配色反了」）。
+            Row(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .background(
+                        if (backdrop != null) {
+                            Color.Transparent
+                        } else {
+                            MiuixTheme.colorScheme.surface
+                        },
+                    )
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
+                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
+                    .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
+                    // 高度跟随内容：标题可能一行也可能两行，不能写死。
+                    // 大标题栏给足最小高度（对齐 Miuix TopAppBar 的折叠高度）。
+                    .heightIn(
+                        min = if (large) {
+                            MiuixTopBarDefaults.CollapsedHeight + 48.dp
+                        } else {
+                            MiuixTopBarDefaults.SmallTopAppBarCenterHeight
+                        },
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier.padding(start = MiuixTopBarDefaults.NavigationIconPadding),
+                ) {
+                    navigationIcon()
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = MiuixTopBarDefaults.TitlePadding),
+                ) {
+                    titleContent()
+                }
+                Row(
+                    modifier = Modifier.padding(end = MiuixTopBarDefaults.ActionIconPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                    content = actions,
+                )
+            }
         }
     }
 }
@@ -139,6 +257,10 @@ class KedgeScrollBehavior internal constructor(
     internal val miuix: top.yukonga.miuix.kmp.basic.ScrollBehavior?,
 )
 
+/** [KedgeScrollBehavior] 的 Miuix 侧行为，供 KhatKit 自绘顶栏时消费。 */
+val KedgeScrollBehavior.miuixScrollBehavior: top.yukonga.miuix.kmp.basic.ScrollBehavior?
+    get() = miuix
+
 /** Exit-until-collapsed behavior matching the active [KedgeStyle]. */
 @Composable
 fun rememberKedgeExitUntilCollapsedScrollBehavior(): KedgeScrollBehavior =
@@ -164,6 +286,8 @@ fun KedgeLargeTopAppBar(
     actions: @Composable RowScope.() -> Unit = {},
     titleContent: (@Composable () -> Unit)? = null,
     scrollBehavior: KedgeScrollBehavior? = null,
+    translucentTopBar: Boolean = true,
+    backdrop: top.yukonga.miuix.kmp.blur.LayerBackdrop? = LocalKedgePageBackdrop.current,
 ) {
     when (LocalKedgeStyle.current) {
         KedgeStyle.MD3Exp -> LargeFlexibleTopAppBar(
@@ -178,15 +302,40 @@ fun KedgeLargeTopAppBar(
         )
 
         KedgeStyle.Miuix -> MiuixTopBarContentColor {
-            MiuixTopAppBar(
-                title = title,
-                modifier = modifier,
-                largeTitle = title,
-                subtitle = subtitle.orEmpty(),
-                navigationIcon = navigationIcon,
-                actions = actions,
-                scrollBehavior = scrollBehavior?.miuix,
-            )
+            // 大标题折叠要用「本屏那个」Miuix 行为，否则顶栏观察的是一个没人喂
+            // 滚动的实例，大标题永远不收缩。优先取显式传入的，回退到
+            // KedgePageScaffold 下发的 LocalKedgePageScrollBehavior。
+            val effectiveScroll = scrollBehavior ?: LocalKedgePageScrollBehavior.current
+            // 毛玻璃：backdrop 必须由「不含本顶栏」的 KedgeBlurSurface 提供并显式传入。
+            // 模糊生效时底色必须透明，否则模糊无从透出。
+            KedgeBlurredBar(backdrop = backdrop) {
+              if (titleContent != null) {
+                // Miuix 的 TopAppBar 标题只收字符串，塞不进自定义标题槽
+                // （ChatPage 的标题 morph 成搜索框就走这条路）。
+                KedgeMiuixCustomTitleBar(
+                    modifier = modifier,
+                    titleContent = titleContent,
+                    navigationIcon = navigationIcon,
+                    actions = actions,
+                    large = true,
+                )
+              } else MiuixTopAppBar(
+                    title = title,
+                    modifier = modifier,
+                    // 无 backdrop 时与页面背景同色（KernelSU 的顶栏/背景不分色），
+                    // 不做半透明，否则顶栏会比背景亮一档，看着像配色反了。
+                    color = if (backdrop != null) {
+                        Color.Transparent
+                    } else {
+                        MiuixTheme.colorScheme.surface
+                    },
+                    largeTitle = title,
+                    subtitle = subtitle.orEmpty(),
+                    navigationIcon = navigationIcon,
+                    actions = actions,
+                    scrollBehavior = effectiveScroll?.miuix,
+                )
+            }
         }
     }
 }

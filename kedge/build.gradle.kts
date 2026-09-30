@@ -53,6 +53,8 @@ dependencies {
     api(libs.androidx.compose.material3.adaptive.navigation.suite)
     api(libs.miuix.ui)
     api(libs.miuix.blur)
+    api(libs.miuix.preference)
+    api(libs.miuix.icons)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
