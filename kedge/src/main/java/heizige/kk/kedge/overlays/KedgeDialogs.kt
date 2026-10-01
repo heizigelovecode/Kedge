@@ -23,6 +23,8 @@ import heizige.kk.khromia.components.AnimatedAlertDialog
 import heizige.kk.khromia.components.AnimatedDialogWindow
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.window.WindowDialog as MiuixWindowDialog
+import heizige.kk.kedge.theme.KedgeTextStyles
+import heizige.kk.kedge.theme.MiuixTextStyleScope
 
 @Composable
 fun KedgeDialog(
@@ -153,19 +155,27 @@ fun KedgeAlertDialogSlots(
                         contentAlignment = Alignment.Center,
                     ) { icon() }
                 }
+                // 插槽里通常是调用方写的裸 Text(...)（没写 style），所以给每档
+                // 容器套 Miuix 字阶，否则弹窗正文会是 MD3 字号。
                 if (title != null) {
-                    Box(modifier = Modifier.fillMaxWidth()) { title() }
+                    MiuixTextStyleScope(KedgeTextStyles.title()) {
+                        Box(modifier = Modifier.fillMaxWidth()) { title() }
+                    }
                 }
                 if (text != null) {
-                    Box(modifier = Modifier.fillMaxWidth()) { text() }
+                    MiuixTextStyleScope(KedgeTextStyles.body()) {
+                        Box(modifier = Modifier.fillMaxWidth()) { text() }
+                    }
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (dismissButton != null) { dismissButton() }
-                    confirmButton()
+                MiuixTextStyleScope(KedgeTextStyles.body()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (dismissButton != null) { dismissButton() }
+                        confirmButton()
+                    }
                 }
             }
         }

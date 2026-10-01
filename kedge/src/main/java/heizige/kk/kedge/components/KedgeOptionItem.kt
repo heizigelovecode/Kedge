@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +22,7 @@ import heizige.kk.kedge.theme.KedgeStyle
 import heizige.kk.kedge.theme.LocalKedgeStyle
 import heizige.kk.khromia.components.OptionItem as KhromiaOptionItem
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import heizige.kk.kedge.theme.MiuixTextStyleScope
 
 /** 插槽版选项行：MD3Exp 走 Khromia OptionItem，Miuix 走 KedgeCard 行。 */
 @Composable
@@ -98,24 +98,6 @@ fun KedgeOptionItem(
             }
         }
     }
-}
-
-/**
- * 把 MD3 的 `LocalTextStyle` 临时换成 Miuix 的某个文字样式。
- *
- * Miuix 没有自己的 TextStyle CompositionLocal，而业务里大量 `Text(...)` 不写
- * style、走 MD3 的 `LocalTextStyle`。这里桥接一层，让这些"裸" Text 在 Miuix 下
- * 也能拿到 Miuix 的字号/字重/行高，同时内容颜色仍由 `LocalContentColor` 决定。
- */
-@Composable
-private fun MiuixTextStyleScope(
-    style: androidx.compose.ui.text.TextStyle,
-    content: @Composable () -> Unit,
-) {
-    CompositionLocalProvider(
-        androidx.compose.material3.LocalTextStyle provides style,
-        content = content,
-    )
 }
 
 /** 设置项卡片的度量：内边距 / 图标与文字间距 / 最小高度。 */

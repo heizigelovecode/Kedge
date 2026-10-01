@@ -25,6 +25,8 @@ import heizige.kk.kedge.components.KedgeCard
 import heizige.kk.kedge.theme.KedgeStyle
 import heizige.kk.kedge.theme.LocalKedgeStyle
 import top.yukonga.miuix.kmp.window.WindowBottomSheet as MiuixWindowBottomSheet
+import heizige.kk.kedge.theme.KedgeTextStyles
+import heizige.kk.kedge.theme.MiuixTextStyleScope
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,19 +168,22 @@ fun KedgePrimaryBottomSheet(
                 content()
                 if (confirmText != null || dismissText != null) {
                     Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (dismissText != null) {
-                            KedgeTextButton(onClick = onDismiss) {
-                                top.yukonga.miuix.kmp.basic.Text(dismissText)
+                    // 按钮文案是裸 Text，给套上 Miuix 字阶（KSU 的弹层按钮同理）
+                    MiuixTextStyleScope(KedgeTextStyles.body()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (dismissText != null) {
+                                KedgeTextButton(onClick = onDismiss) {
+                                    top.yukonga.miuix.kmp.basic.Text(dismissText)
+                                }
                             }
-                        }
-                        if (confirmText != null && onConfirm != null) {
-                            KedgeButton(onClick = onConfirm) {
-                                top.yukonga.miuix.kmp.basic.Text(confirmText)
+                            if (confirmText != null && onConfirm != null) {
+                                KedgeButton(onClick = onConfirm) {
+                                    top.yukonga.miuix.kmp.basic.Text(confirmText)
+                                }
                             }
                         }
                     }
