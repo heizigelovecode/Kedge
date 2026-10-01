@@ -1,6 +1,7 @@
 package heizige.kk.kedge.adaptive
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -43,8 +44,10 @@ fun KedgeOverlayScaffold(
     modifier: Modifier = Modifier,
     contentInsetTop: Dp = 0.dp,
     contentInsetBottom: Dp = 0.dp,
-    topBar: @Composable () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {},
+    // 栏是叠在 Box 上的图层，收 BoxScope 让调用方能自己 align
+    // （底栏需要 align(Alignment.BottomCenter)，否则会被摆在左上角）。
+    topBar: @Composable BoxScope.() -> Unit = {},
+    bottomBar: @Composable BoxScope.() -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
