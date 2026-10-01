@@ -3,10 +3,13 @@ package heizige.kk.kedge.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.MiuixOverscrollFactory
 
 /**
  * 把 Miuix 的调色板桥接成 Material3 的 [ColorScheme]。
@@ -117,8 +120,15 @@ internal fun MiuixMaterialThemeBridge(
     val scheme = miuixToMaterialScheme(darkTheme)
     androidx.compose.material3.MaterialTheme(
         colorScheme = scheme,
-        content = content,
-    )
+    ) {
+        // Miuix 下必须显式给回弹效果：不提供时 LocalOverscrollFactory 没有
+        // provider，LazyColumn 的 overscroll 变成"没有效果"，列表滚到头就是
+        // 硬停，手感很别扭。这里用 Miuix 自带的 MiuixOverscrollFactory。
+        CompositionLocalProvider(
+            LocalOverscrollFactory provides MiuixOverscrollFactory,
+            content = content,
+        )
+    }
 }
 
 /** 供 KedgeColors 等在 Miuix 下取值时复用，避免重复构造。 */
