@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
@@ -76,13 +77,17 @@ fun KedgeOverlayScaffold(
                 content()
             }
         }
+        // 对齐要落在**测量盒自身**上：栏拿到的是内层 BoxScope，相对内层
+        // （高度=内容高）align 没有意义，底栏会又回到屏幕左上角。
         Box(
             modifier = Modifier
+                .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .onSizeChanged { topBarHeight = Dp(it.height.toFloat()) },
         ) { topBar() }
         Box(
             modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .onSizeChanged { bottomBarHeight = Dp(it.height.toFloat()) },
         ) { bottomBar() }
