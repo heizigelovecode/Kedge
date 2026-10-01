@@ -4,7 +4,10 @@ kotlin = "2.4.10"
 coreKtx = "1.19.0"
 activityCompose = "1.13.0"
 composeBom = "2026.08.00"
-material3 = "1.5.0-alpha26"
+# 必须与 KhatKit 运行时解析到的 material3 一致（本仓库与 KhatKit 通过
+# includeBuild 组合编译，各模块按自己的版本编译，但打进同一个 APK 时取最高
+# 版本）。版本不一致时编译能过，运行期会 NoSuchMethodError。
+material3 = "1.5.0-alpha29"
 miuix = "0.9.3"
 khromia = "1.6.2"
 junit = "4.13.2"
