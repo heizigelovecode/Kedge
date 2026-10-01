@@ -43,6 +43,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.unit.Dp
@@ -60,6 +61,7 @@ import top.yukonga.miuix.kmp.basic.NavigationRailItem as MiuixNavigationRailItem
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar as MiuixSmallTopAppBar
 import top.yukonga.miuix.kmp.basic.TopAppBarDefaults as MiuixTopBarDefaults
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar as MiuixSmallTopAppBar
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.basic.rememberNavigationRailState
 import top.yukonga.miuix.kmp.theme.LocalContentColor as MiuixLocalContentColor
@@ -288,6 +290,11 @@ fun KedgeLargeTopAppBar(
     scrollBehavior: KedgeScrollBehavior? = null,
     translucentTopBar: Boolean = true,
     backdrop: top.yukonga.miuix.kmp.blur.LayerBackdrop? = LocalKedgePageBackdrop.current,
+    /**
+     * 标题透明度（0=隐藏）。Miuix 分支同时作用于折叠后的小标题与大标题；
+     * 对应 KernelSU `AboutMiuix.kt` 里 `titleColor` 随滚动淡入的效果。
+     */
+    titleAlpha: Float = 1f,
 ) {
     when (LocalKedgeStyle.current) {
         KedgeStyle.MD3Exp -> LargeFlexibleTopAppBar(
@@ -329,13 +336,84 @@ fun KedgeLargeTopAppBar(
                     } else {
                         MiuixTheme.colorScheme.surface
                     },
+                    titleColor = MiuixTheme.colorScheme.onSurface.copy(alpha = titleAlpha.coerceIn(0f, 1f)),
                     largeTitle = title,
+                    largeTitleColor = MiuixTheme.colorScheme.onSurface.copy(alpha = titleAlpha.coerceIn(0f, 1f)),
                     subtitle = subtitle.orEmpty(),
                     navigationIcon = navigationIcon,
                     actions = actions,
                     scrollBehavior = effectiveScroll?.miuix,
                 )
             }
+        }
+    }
+}
+
+/**
+ * 小标题栏（无折叠大标题），照搬 KernelSU `AboutMiuix.kt` 用的 `SmallTopAppBar`。
+ *
+ * 与 [KedgeLargeTopAppBar] 的区别：没有 `largeTitle`，标题不会折叠成两行，
+ * 也不会因为 default `largeTitle = title` 而在两个位置同时出现。
+ * 关于页顶栏用它，标题再配合 [titleAlpha] 随滚动淡入。
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun KedgeSmallTopBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+    titleAlpha: Float = 1f,
+    /**
+     * 顶栏底色透明度；非 null 时跳过毛玻璃，直接用带 alpha 的底色。
+     * 对应 lyricon `AboutScreen.kt:118`。
+     */
+    barColorAlpha: Float? = null,
+    scrollBehavior: KedgeScrollBehavior? = null,
+    backdrop: top.yukonga.miuix.kmp.blur.LayerBackdrop? = LocalKedgePageBackdrop.current,
+) {
+    val alpha = titleAlpha.coerceIn(0f, 1f)
+    when (LocalKedgeStyle.current) {
+        KedgeStyle.MD3Exp -> TopAppBar(
+            title = {
+                Text(
+                    text = title,
+                    modifier = Modifier.graphicsLayer { this.alpha = alpha },
+                )
+            },
+            modifier = modifier,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            colors = if (barColorAlpha != null) {
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = MiuixTheme.colorScheme.surface.copy(alpha = barColorAlpha.coerceIn(0f, 1f)),
+                )
+            } else {
+                TopAppBarDefaults.topAppBarColors()
+            },
+        )
+
+        KedgeStyle.Miuix -> MiuixTopBarContentColor {
+            val effectiveScroll = scrollBehavior ?: LocalKedgePageScrollBehavior.current
+            val barColor = if (barColorAlpha != null) {
+                MiuixTheme.colorScheme.surface.copy(alpha = barColorAlpha.coerceIn(0f, 1f))
+            } else if (backdrop != null) {
+                Color.Transparent
+            } else {
+                MiuixTheme.colorScheme.surface
+            }
+            val bar: @Composable () -> Unit = {
+                MiuixSmallTopAppBar(
+                    title = title,
+                    modifier = modifier,
+                    titleColor = MiuixTheme.colorScheme.onSurface.copy(alpha = alpha),
+                    color = barColor,
+                    navigationIcon = navigationIcon,
+                    actions = actions,
+                    scrollBehavior = effectiveScroll?.miuix,
+                )
+            }
+            if (barColorAlpha != null) bar() else KedgeBlurredBar(backdrop = backdrop) { bar() }
         }
     }
 }
