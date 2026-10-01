@@ -30,6 +30,7 @@ import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.ui.unit.Dp
 
 enum class KedgeButtonVariant {
     Primary,
@@ -76,6 +77,12 @@ fun KedgeButton(
      * 而不丢自定义配色；Miuix 分支用自己那套 primary / surface 配色。
      */
     colors: ButtonColors? = null,
+    /**
+     * Miuix 分支的圆角半径，**只在 Miuix 分支生效**。默认胶囊（KSU 的按钮都是胶囊），
+     * 但有些位置要的是大圆角矩形（如侧边栏的「新建文件夹」是 16dp 圆角块）。
+     * MD3Exp 分支请用 [shapes]。
+     */
+    miuixCornerRadius: Dp = KedgeButtonDefaults.MiuixPillCornerRadius,
     content: @Composable RowScope.() -> Unit,
 ) {
     when (LocalKedgeStyle.current) {
@@ -98,6 +105,7 @@ fun KedgeButton(
             variant = variant,
             contentPadding = contentPadding,
             interactionSource = interactionSource,
+            miuixCornerRadius = miuixCornerRadius,
             content = content,
         )
     }
@@ -261,6 +269,7 @@ private fun KedgeMiuixButton(
     modifier: Modifier,
     enabled: Boolean,
     variant: KedgeButtonVariant,
+    miuixCornerRadius: Dp,
     contentPadding: PaddingValues,
     interactionSource: MutableInteractionSource?,
     content: @Composable RowScope.() -> Unit,
@@ -281,7 +290,7 @@ private fun KedgeMiuixButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        cornerRadius = KedgeButtonDefaults.MiuixPillCornerRadius,
+        cornerRadius = miuixCornerRadius,
         colors = colors,
         insideMargin = contentPadding,
         interactionSource = interactionSource,
