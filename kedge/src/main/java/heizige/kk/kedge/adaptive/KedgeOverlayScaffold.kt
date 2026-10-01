@@ -3,16 +3,10 @@ package heizige.kk.kedge.adaptive
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -39,8 +33,9 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
  * - 顶栏/底栏**不能**放进 [KedgeBlurSurface] —— 那样它们会采样到含自己的
  *   图层，导致崩溃或糊成一片（KSU 的 `BlurredBar` 同样有这个要求）。
  * - [contentInsetTop] / [contentInsetBottom] 要**加在 content 上**，让首尾
- *   内容不被栏盖住。默认传 `null`，即按实测栏高（含窗口 insets）自动内缩；
- *   只有在确实需要自定义内缩时才显式传值。
+ *   内容不被栏盖住。调用方传栏的实际高度（**含**状态栏/导航栏 insets）。
+ *   这里不去自动测量：栏外面包着 `KedgeBlurredBar`，毛玻璃层上报的尺寸
+ *   不可靠，实测会把 content 整体顶飞。
  *
  * @param backdrop 由调用方用 [rememberKedgeBlurBackdrop] 建立并下发 —— 栏要
  *   消费同一个 backdrop 才有模糊，所以不能在这里另建。每屏一个，多建会多录
@@ -50,47 +45,26 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
 fun KedgeOverlayScaffold(
     backdrop: LayerBackdrop?,
     modifier: Modifier = Modifier,
-    contentInsetTop: Dp? = null,
-    contentInsetBottom: Dp? = null,
+    contentInsetTop: Dp = 0.dp,
+    contentInsetBottom: Dp = 0.dp,
     // 栏是叠在 Box 上的图层，收 BoxScope 让调用方能自己 align
     // （底栏需要 align(Alignment.BottomCenter)，否则会被摆在左上角）。
     topBar: @Composable BoxScope.() -> Unit = {},
     bottomBar: @Composable BoxScope.() -> Unit = {},
     content: @Composable () -> Unit,
 ) {
-    // 栏的实际高度只有量出来才知道（含状态栏/导航栏 insets），写死常量必然和
-    // 真实栏高对不上——首尾内容就会被盖住。这里默认按实测高度内缩，调用方仍可
-    // 显式传值覆盖。
-    var topBarHeight by remember { mutableStateOf(0.dp) }
-    var bottomBarHeight by remember { mutableStateOf(0.dp) }
-
     Box(modifier = modifier.fillMaxSize()) {
         KedgeBlurSurface(backdrop = backdrop, modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(
-                        top = contentInsetTop ?: topBarHeight,
-                        bottom = contentInsetBottom ?: bottomBarHeight,
-                    ),
+                    .padding(top = contentInsetTop, bottom = contentInsetBottom),
             ) {
                 content()
             }
         }
-        // 对齐要落在**测量盒自身**上：栏拿到的是内层 BoxScope，相对内层
-        // （高度=内容高）align 没有意义，底栏会又回到屏幕左上角。
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .onSizeChanged { topBarHeight = Dp(it.height.toFloat()) },
-        ) { topBar() }
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .onSizeChanged { bottomBarHeight = Dp(it.height.toFloat()) },
-        ) { bottomBar() }
+        Box(modifier = Modifier.align(Alignment.TopCenter)) { topBar() }
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) { bottomBar() }
     }
 }
 
