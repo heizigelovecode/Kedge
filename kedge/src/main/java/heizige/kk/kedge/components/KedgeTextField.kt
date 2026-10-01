@@ -549,3 +549,49 @@ private fun KedgeMiuixTextField(
         }
     }
 }
+/**
+ * 基于 `TextFieldState` 的文本框，**按风格分流**。
+ *
+ * 与 [KedgeTextField] 的区别：状态由调用方用 `rememberTextFieldState()` 持有
+ * （而不是 value/onValueChange 一对），适合代码编辑器这类需要靠 `TextFieldState`
+ * 读值、并且会在重组外读当前文本的场景。
+ *
+ * Miuix 的 `TextField` 同样有接收 `TextFieldState` + `TextFieldLineLimits` 的重载，
+ * 所以两个风格的行数限制语义能保持一致。
+ */
+@Composable
+fun KedgeTextFieldWithState(
+    state: androidx.compose.foundation.text.input.TextFieldState,
+    modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
+    enabled: Boolean = true,
+    lineLimits: androidx.compose.foundation.text.input.TextFieldLineLimits? = null,
+    /** 文字样式：MD3 原样应用；Miuix 只取字号/字重，其余用 Miuix 的样式。 */
+    textStyle: androidx.compose.ui.text.TextStyle? = null,
+    shape: androidx.compose.ui.graphics.Shape = KedgeTextFieldDefaults.Md3Shape,
+    /** MD3 配色，只在 MD3Exp 分支生效。 */
+    colors: androidx.compose.material3.TextFieldColors? = null,
+) {
+    when (LocalKedgeStyle.current) {
+        KedgeStyle.MD3Exp -> androidx.compose.material3.TextField(
+            state = state,
+            modifier = modifier,
+            readOnly = readOnly,
+            enabled = enabled,
+            lineLimits = lineLimits ?: androidx.compose.foundation.text.input.TextFieldLineLimits.SingleLine,
+            textStyle = textStyle ?: androidx.compose.material3.LocalTextStyle.current,
+            shape = shape,
+            colors = colors ?: androidx.compose.material3.TextFieldDefaults.colors(),
+        )
+
+        KedgeStyle.Miuix -> top.yukonga.miuix.kmp.basic.TextField(
+            state = state,
+            modifier = modifier,
+            readOnly = readOnly,
+            enabled = enabled,
+            // Miuix 的 lineLimits 是非空参数，没传时按多行处理（编辑器场景）。
+            lineLimits = lineLimits ?: androidx.compose.foundation.text.input.TextFieldLineLimits.MultiLine(),
+            textStyle = textStyle ?: MiuixTheme.textStyles.main,
+        )
+    }
+}
