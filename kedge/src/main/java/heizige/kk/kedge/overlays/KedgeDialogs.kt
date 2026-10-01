@@ -1,6 +1,7 @@
 package heizige.kk.kedge.overlays
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -101,6 +102,70 @@ fun KedgeAlertDialog(
                 }
                 KedgeButton(onClick = onConfirm, variant = KedgeButtonVariant.Primary) {
                     MiuixText(confirmText)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * slot 版确认弹窗，签名对齐 MD3 `AlertDialog`。
+ *
+ * 与 [KedgeAlertDialog] 的区别：后者的 title/text 是 `String`，只能显示纯文本；
+ * 这里全是 `@Composable` 插槽，调用方能塞进 Miuix `Text`、图标、自定义布局等。
+ * app 侧的 `AppAlertDialog` 就是这个形状，直接换成 Kedge 组件即可双风格化。
+ *
+ * Miuix 分支下 title/text/icon 依次竖排（icon 在上），确认/取消按钮横排在右下，
+ * 与 KernelSU 的弹窗一致；确认按钮用 [KedgeButton] Primary 以跟随 Miuix 配色。
+ */
+@Composable
+fun KedgeAlertDialogSlots(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    dismissButton: (@Composable () -> Unit)? = null,
+    icon: (@Composable () -> Unit)? = null,
+    title: (@Composable () -> Unit)? = null,
+    text: (@Composable () -> Unit)? = null,
+) {
+    when (LocalKedgeStyle.current) {
+        KedgeStyle.MD3Exp -> AnimatedAlertDialog(
+            onDismissRequest = onDismissRequest,
+            modifier = modifier,
+            confirmButton = confirmButton,
+            dismissButton = dismissButton,
+            icon = icon,
+            title = title,
+            text = text,
+        )
+
+        KedgeStyle.Miuix -> MiuixWindowDialog(
+            show = true,
+            onDismissRequest = onDismissRequest,
+        ) {
+            Column(
+                modifier = modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (icon != null) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                    ) { icon() }
+                }
+                if (title != null) {
+                    Box(modifier = Modifier.fillMaxWidth()) { title() }
+                }
+                if (text != null) {
+                    Box(modifier = Modifier.fillMaxWidth()) { text() }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (dismissButton != null) { dismissButton() }
+                    confirmButton()
                 }
             }
         }

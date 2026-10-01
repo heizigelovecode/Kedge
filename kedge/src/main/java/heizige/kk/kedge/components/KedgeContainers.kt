@@ -123,11 +123,24 @@ fun KedgeCard(
             // surfaceContainer / onSurfaceContainer（KernelSU 的卡片就是这个色）。
             // 之前这里强制成 surface，和页面背景同色 -> 卡片在 Miuix 下完全隐形，
             // 表现为「设置项没有背景颜色和圆角」。
+            //
+            // colors 也要读：调用方常写
+            // `KedgeCard(colors = CardDefaults.cardColors(containerColor = ...))`
+            // 来表达"错误态 / 选中态"这类语义（原先只喂 MD3 分支，Miuix 下被静默
+            // 丢弃，于是禁用项和正常项长得一样）。CardColors 的默认值是
+            // Color.Unspecified，只有调用方真的指定了才覆盖。
             colors = MiuixCardDefaults.defaultColors(
-                color = if (color == Color.Unspecified) {
-                    MiuixTheme.colorScheme.surfaceContainer
-                } else {
-                    color
+                color = when {
+                    color != Color.Unspecified -> color
+                    colors != null && colors.containerColor != Color.Unspecified ->
+                        colors.containerColor
+                    else -> MiuixTheme.colorScheme.surfaceContainer
+                },
+                contentColor = when {
+                    contentColor != Color.Unspecified -> contentColor
+                    colors != null && colors.contentColor != Color.Unspecified ->
+                        colors.contentColor
+                    else -> Color.Unspecified
                 },
             ),
             content = content,
