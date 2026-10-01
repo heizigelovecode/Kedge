@@ -76,8 +76,24 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 groupId = "heizige.kk"
                 artifactId = "kedge"
-                version = "0.1.1"
+                version = "0.1.2"
                 from(components["release"])
+            }
+        }
+
+        // 与 Khromia 同一套 GitHub Packages 仓库(两个 artifact 都发在
+        // heizigelovecode/Khromia)。之前这里没配 repositories,只有
+        // publishToMavenLocal 可用,导致依赖方只能拉到旧的 0.1.1。
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/heizigelovecode/Khromia")
+                credentials {
+                    username = project.findProperty("gpr.user") as String?
+                        ?: System.getenv("GITHUB_USER")
+                    password = project.findProperty("gpr.key") as String?
+                        ?: System.getenv("GITHUB_TOKEN")
+                }
             }
         }
     }
