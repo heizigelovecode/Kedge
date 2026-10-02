@@ -88,6 +88,9 @@ internal data class SegmentedSlotEntry(
  * 再套一层 [KedgeSurface] 会变成两层底色、两层圆角。
  *
  * [title] 是插槽而非 String，且**没有项时也会渲染**——空分组仍要显示标题。
+ * 它被放在项列**外面**、不参与 [itemGap]：调用点通常自己在 title 槽里带上下
+ * padding，再叠一层项间距会多出一道缝。与 [KedgeSegmentedList]（title 在项列内、
+ * 参与间距）刻意不同，迁移时别照抄那套间距。
  */
 @Composable
 fun KedgeSegmentedListSlots(
@@ -98,10 +101,12 @@ fun KedgeSegmentedListSlots(
 ) {
     val scope = KedgeSegmentedListSlotsScope().apply(content)
     val visibleItems = scope.items.filter { it.visible }
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(itemGap)) {
+    Column(modifier = modifier) {
         title?.invoke()
-        visibleItems.forEachIndexed { index, entry ->
-            entry.content(index, visibleItems.size)
+        Column(verticalArrangement = Arrangement.spacedBy(itemGap)) {
+            visibleItems.forEachIndexed { index, entry ->
+                entry.content(index, visibleItems.size)
+            }
         }
     }
 }
