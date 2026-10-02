@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card as MdCard
 import androidx.compose.material3.CardColors
@@ -32,26 +33,58 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 fun KedgeSurface(
     modifier: Modifier = Modifier,
+    /**
+     * 可点击。为 `null`（默认）时是纯容器。MD3 有 `Surface(onClick = …)` 重载，
+     * 这里一并支持，好让 MD3 调用点能整体换成 Kedge 组件。
+     */
+    onClick: (() -> Unit)? = null,
+    enabled: Boolean = true,
     color: Color = Color.Unspecified,
     contentColor: Color = Color.Unspecified,
     shape: Shape? = null,
     shadowElevation: Dp = 0.dp,
+    /**
+     * MD3 的色调抬升（tonal overlay），**只在 MD3Exp 分支生效**。Miuix 没有色调
+     * 叠加这回事，收下它是为了让 MD3 调用点（`Surface(tonalElevation = …)`）能整体
+     * 换成 Kedge 组件而不丢参数。
+     */
+    tonalElevation: Dp = 0.dp,
     border: BorderStroke? = null,
     content: @Composable () -> Unit,
 ) {
     when (LocalKedgeStyle.current) {
-        KedgeStyle.MD3Exp -> MdSurface(
-            modifier = modifier,
-            color = if (color == Color.Unspecified) MaterialTheme.colorScheme.surface else color,
-            contentColor = if (contentColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else contentColor,
-            shape = shape ?: MaterialTheme.shapes.medium,
-            shadowElevation = shadowElevation,
-            border = border,
-            content = content,
-        )
+        // MD3 的可点击 Surface 是独立重载且 onClick 非空，所以要分两次调用，
+        // 不能靠把 onClick 传成 null 落到无 onClick 的重载上。
+        KedgeStyle.MD3Exp -> if (onClick != null) {
+            MdSurface(
+                onClick = onClick,
+                modifier = modifier,
+                enabled = enabled,
+                color = if (color == Color.Unspecified) MaterialTheme.colorScheme.surface else color,
+                contentColor = if (contentColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else contentColor,
+                shape = shape ?: MaterialTheme.shapes.medium,
+                shadowElevation = shadowElevation,
+                tonalElevation = tonalElevation,
+                border = border,
+                content = content,
+            )
+        } else {
+            MdSurface(
+                modifier = modifier,
+                color = if (color == Color.Unspecified) MaterialTheme.colorScheme.surface else color,
+                contentColor = if (contentColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else contentColor,
+                shape = shape ?: MaterialTheme.shapes.medium,
+                shadowElevation = shadowElevation,
+                tonalElevation = tonalElevation,
+                border = border,
+                content = content,
+            )
+        }
 
         KedgeStyle.Miuix -> MiuixSurface(
-            modifier = modifier,
+            modifier = modifier.then(
+                if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier
+            ),
             color = if (color == Color.Unspecified) MiuixTheme.colorScheme.surface else color,
             contentColor = if (contentColor == Color.Unspecified) MiuixTheme.colorScheme.onSurface else contentColor,
             shape = shape ?: RoundedCornerShape(16.dp),
