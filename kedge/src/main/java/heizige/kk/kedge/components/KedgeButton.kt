@@ -28,6 +28,7 @@ import heizige.kk.kedge.theme.KedgeStyle
 import heizige.kk.kedge.theme.LocalKedgeStyle
 import heizige.kk.khromia.components.pressBounce
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
+import top.yukonga.miuix.kmp.basic.ButtonColors as MiuixButtonColors
 import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -69,6 +70,12 @@ fun KedgeButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     variant: KedgeButtonVariant = KedgeButtonVariant.Primary,
+    /**
+     * Miuix 分支的按钮配色。`colors` 是 Material3 的 [androidx.compose.material3.ButtonColors]，
+     * 只喂 MD3 分支，Miuix 侧原本无法单独调色（只能由 [variant] 推导），想给某个按钮
+     * 换色就得改全局默认。这里补一个 Miuix 专用的透传口，两种风格才能分别调。
+     */
+    miuixColors: MiuixButtonColors? = null,
     contentPadding: PaddingValues = KedgeButtonDefaults.ContentPadding,
     interactionSource: MutableInteractionSource? = null,
     shapes: ButtonShapes? = null,
@@ -107,6 +114,7 @@ fun KedgeButton(
             contentPadding = contentPadding,
             interactionSource = interactionSource,
             miuixCornerRadius = miuixCornerRadius,
+            miuixColors = miuixColors,
             content = content,
         )
     }
@@ -275,11 +283,12 @@ private fun KedgeMiuixButton(
     enabled: Boolean,
     variant: KedgeButtonVariant,
     miuixCornerRadius: Dp,
+    miuixColors: MiuixButtonColors?,
     contentPadding: PaddingValues,
     interactionSource: MutableInteractionSource?,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val colors = when (variant) {
+    val colors = miuixColors ?: when (variant) {
         KedgeButtonVariant.Primary -> MiuixButtonDefaults.buttonColorsPrimary()
         KedgeButtonVariant.Secondary -> MiuixButtonDefaults.buttonColors()
         KedgeButtonVariant.Text -> MiuixButtonDefaults.buttonColors(
