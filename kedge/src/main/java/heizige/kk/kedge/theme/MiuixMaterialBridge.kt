@@ -120,6 +120,10 @@ internal fun MiuixMaterialThemeBridge(
     val scheme = miuixToMaterialScheme(darkTheme)
     androidx.compose.material3.MaterialTheme(
         colorScheme = scheme,
+        // 关键：把 MD3 的字阶槽位桥接到 Miuix 的 textStyles。不桥接的话，
+        // 所有没显式写 style 的 Text(...) 都会拿到 MD3 默认字阶（Roboto + MD3 尺寸），
+        // 与卡片/圆角/配色不搭——这类调用点有上千处，逐个改不现实。
+        typography = miuixTypography(),
     ) {
         // Miuix 下必须显式给回弹效果：不提供时 LocalOverscrollFactory 没有
         // provider，LazyColumn 的 overscroll 变成"没有效果"，列表滚到头就是
@@ -134,3 +138,34 @@ internal fun MiuixMaterialThemeBridge(
 /** 供 KedgeColors 等在 Miuix 下取值时复用，避免重复构造。 */
 internal val MiuixBridgeSurfaceContainer: Color
     @Composable @ReadOnlyComposable get() = MiuixTheme.colorScheme.surfaceContainer
+
+
+/**
+ * 把 Miuix 的 [TextStyles] 映射成 MD3 的 [Typography]。
+ *
+ * 业务代码里大量 `Text(...)` 不写 `style`，默认走 `bodyLarge`；而 MD3 的其它槽位
+ * （title / label / body 系列）也常被显式引用。把它们全部接到 Miuix 的字阶上，
+ * Miuix 下就
+ * 不会再漏出 MD3 的 Roboto/字号。MD3Exp 分支不走这里，保持原生 Typography。
+ */
+@Composable
+private fun miuixTypography(): androidx.compose.material3.Typography {
+    val t = MiuixTheme.textStyles
+    return androidx.compose.material3.Typography(
+        displayLarge = t.headline1,
+        displayMedium = t.headline1,
+        displaySmall = t.headline2,
+        headlineLarge = t.headline1,
+        headlineMedium = t.headline2,
+        headlineSmall = t.subtitle,
+        titleLarge = t.title1,
+        titleMedium = t.title2,
+        titleSmall = t.title3,
+        bodyLarge = t.body1,
+        bodyMedium = t.main,
+        bodySmall = t.body2,
+        labelLarge = t.button,
+        labelMedium = t.footnote1,
+        labelSmall = t.footnote2,
+    )
+}
