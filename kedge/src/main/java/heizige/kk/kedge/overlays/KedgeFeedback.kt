@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.CircularProgressIndicator as MdCircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator as MdLinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator as MdLinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,6 +46,14 @@ enum class KedgeProgressIndicatorType {
     Linear,
     Circular,
     Infinite,
+
+    /**
+     * MD3 Expressive 的波浪线性进度（`LinearWavyProgressIndicator`）。
+     *
+     * Miuix 没有波浪形态，降级成普通线性进度（[Linear]）——波浪只是 MD3 的观感装饰，
+     * 不承载信息。Miuix 下继续用它就等于漏出 MD3 控件，所以这里显式提供映射。
+     */
+    Wavy,
 }
 
 /** Host for Toast.show(...) events. Place once near the app root. */
@@ -280,6 +289,21 @@ fun KedgeProgressIndicator(
                 )
             }
 
+            KedgeProgressIndicatorType.Wavy -> if (progress == null) {
+                MdLinearWavyProgressIndicator(
+                    modifier = modifier,
+                    color = color ?: MdProgressIndicatorDefaults.linearColor,
+                    trackColor = trackColor ?: MdProgressIndicatorDefaults.linearTrackColor,
+                )
+            } else {
+                MdLinearWavyProgressIndicator(
+                    progress = { progress },
+                    modifier = modifier,
+                    color = color ?: MdProgressIndicatorDefaults.linearColor,
+                    trackColor = trackColor ?: MdProgressIndicatorDefaults.linearTrackColor,
+                )
+            }
+
             KedgeProgressIndicatorType.Circular,
             KedgeProgressIndicatorType.Infinite,
             -> if (progress == null) {
@@ -301,7 +325,9 @@ fun KedgeProgressIndicator(
         }
 
         KedgeStyle.Miuix -> when (type) {
-            KedgeProgressIndicatorType.Linear -> MiuixLinearProgressIndicator(
+            KedgeProgressIndicatorType.Linear,
+            KedgeProgressIndicatorType.Wavy,
+            -> MiuixLinearProgressIndicator(
                 modifier = modifier,
                 progress = progress,
                 colors = miuixColors,
