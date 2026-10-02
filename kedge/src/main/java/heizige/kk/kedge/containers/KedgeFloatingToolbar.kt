@@ -19,19 +19,23 @@ import top.yukonga.miuix.kmp.basic.FloatingToolbar as MiuixFloatingToolbar
  * 分支被忽略——这三处调用点都是常显式展开（`expanded = true`）或只需要一个浮层，
  * 语义不丢，只是少了收缩动画。
  *
- * @param contentAlignment Miuix 分支的内容对齐；MD3 分支由 MD3 自己处理。
+ * @param leadingContent 前置插槽（MD3 收到 `HorizontalFloatingToolbar` 的
+ *   `RowScope` 版本，Miuix 分支排在内容前面）。
  */
 @Composable
 fun KedgeFloatingToolbar(
     expanded: Boolean = true,
     modifier: Modifier = Modifier,
-    contentAlignment: androidx.compose.ui.Alignment = androidx.compose.ui.Alignment.CenterStart,
+    leadingContent: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     when (LocalKedgeStyle.current) {
         KedgeStyle.MD3Exp -> MdHorizontalFloatingToolbar(
             expanded = expanded,
             modifier = modifier,
+            // MD3 的签名是 `RowScope.() -> Unit`，Kedge 收窄成无接收者版本，
+            // 这里包一层适配
+            leadingContent = leadingContent?.let { slot -> { slot() } },
         ) {
             content()
         }
@@ -42,7 +46,13 @@ fun KedgeFloatingToolbar(
             outSidePadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             showDivider = false,
         ) {
-            content()
+            androidx.compose.foundation.layout.Row(
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+            ) {
+                leadingContent?.invoke()
+                content()
+            }
         }
     }
 }
