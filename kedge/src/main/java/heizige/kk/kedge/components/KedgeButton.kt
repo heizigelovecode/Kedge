@@ -8,6 +8,7 @@ import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton as MdFilledIconButton
 import androidx.compose.material3.FilledTonalIconButton as MdFilledTonalIconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults as MdIconButtonDefaults
 import androidx.compose.material3.IconButtonShapes
 import androidx.compose.material3.IconButton as MdIconButton
@@ -143,6 +144,8 @@ fun KedgeIconButton(
     selected: Boolean = false,
     variant: KedgeIconButtonVariant = KedgeIconButtonVariant.Standard,
     shapes: IconButtonShapes? = null,
+    /** MD3 配色，**只在 MD3Exp 分支生效**；Miuix 用自己的 primary/surface 配色。 */
+    colors: IconButtonColors? = null,
     content: @Composable () -> Unit,
 ) {
     when (LocalKedgeStyle.current) {
@@ -162,6 +165,7 @@ fun KedgeIconButton(
                     shapes = actualShapes,
                     modifier = modifier,
                     enabled = enabled,
+                    colors = colors ?: MdIconButtonDefaults.filledIconButtonColors(),
                     content = content,
                 )
 
@@ -170,6 +174,7 @@ fun KedgeIconButton(
                     shapes = actualShapes,
                     modifier = modifier,
                     enabled = enabled,
+                    colors = colors ?: MdIconButtonDefaults.filledTonalIconButtonColors(),
                     content = content,
                 )
             }
