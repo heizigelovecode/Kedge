@@ -2,11 +2,20 @@ package heizige.kk.kedge.adaptive
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import heizige.kk.kedge.theme.KedgeStyle
+import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
+import heizige.kk.kedge.theme.LocalKedgeStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -53,7 +62,47 @@ fun KedgeOverlayScaffold(
     bottomBar: @Composable BoxScope.() -> Unit = {},
     content: @Composable () -> Unit,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    // Miuix 的 overlay 弹层（KedgeDropdownMenuSlots 用的 OverlayListPopup 等）
+    // 只是把内容注册进 LocalPopupStates / LocalRootPopupStates，真正渲染要靠
+    // Scaffold 自带的 MiuixPopupHost。Miuix 的 ListPopup 没有独立的 Popup 窗口
+    // 版本（basic/ListPopup.kt 只提供 ListPopupColumn / ListPopupContent 这些积木），
+    // 所以宿主是必需的。
+    //
+    // 本组件为了用 BoxScope 对齐顶/底栏，一直是纯 Box，没有 Scaffold，弹层因此
+    // 无处注册：抽屉里长按会话的下拉在 Miuix 下点了没反应。注意不能只补一个
+    // MiuixPopupHost——那样弹层会「出现」，但缺少 Scaffold 的布局上下文，定位与
+    // 容器都不对（菜单压在列表文字上、没有卡片底）。
+    //
+    // 所以 Miuix 下套一层空 Miuix Scaffold 只为提供弹层宿主：顶/底栏仍由下面的
+    // Box 按 BoxScope 对齐，不走 Scaffold 的 topBar/bottomBar 槽。垂直 insets 交还
+    // 给调用方的 contentInsetTop/Bottom，这里只保留水平方向，避免与状态栏/导航栏
+    // inset 叠加两次。
+    if (LocalKedgeStyle.current == KedgeStyle.Miuix) {
+        MiuixScaffold(
+            modifier = modifier,
+            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            contentWindowInsets = WindowInsets.systemBars
+                .add(WindowInsets.displayCutout)
+                .only(WindowInsetsSides.Horizontal),
+        ) { _ ->
+            OverlayScaffoldContent(backdrop, contentInsetTop, contentInsetBottom, topBar, bottomBar, content)
+        }
+        return
+    }
+
+    OverlayScaffoldContent(backdrop, contentInsetTop, contentInsetBottom, topBar, bottomBar, content)
+}
+
+@Composable
+private fun OverlayScaffoldContent(
+    backdrop: LayerBackdrop?,
+    contentInsetTop: Dp,
+    contentInsetBottom: Dp,
+    topBar: @Composable BoxScope.() -> Unit,
+    bottomBar: @Composable BoxScope.() -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
         KedgeBlurSurface(backdrop = backdrop, modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier

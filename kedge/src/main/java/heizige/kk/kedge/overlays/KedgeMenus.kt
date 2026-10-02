@@ -156,8 +156,10 @@ fun KedgeDropdownMenuSlots(
         KedgeStyle.Miuix -> OverlayListPopup(
             show = expanded,
             popupModifier = modifier,
-            // MD3 DropdownMenu 不给背景加遮罩，这里也不加，否则整屏会暗一档。
-            enableWindowDim = false,
+            // 打开窗口变暗：菜单浮在列表内容之上，没有遮罩时分不清菜单与被遮挡的
+            // 行，长按会话这类场景尤其明显。MD3 的 DropdownMenu 走 Popup 且不带
+            // 遮罩，Miuix 这边显式开上以获得「背景压深」的层次提示。
+            enableWindowDim = true,
             onDismissRequest = onDismissRequest,
         ) {
             ListPopupColumn { content() }

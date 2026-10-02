@@ -49,6 +49,19 @@ object KedgeTextStyles {
         KedgeStyle.MD3Exp -> androidx.compose.material3.MaterialTheme.typography.bodyMedium
     }
 
+    /**
+     * 比 [body] 大一级的正文：需要强调但仍属正文层的文案（如抽屉里的主操作按钮标签）。
+     *
+     * 不直接用 [title]：Miuix 侧 title 映射到 headline1，做按钮标签会过大，
+     * 和旁边的图标比例失衡；这里对应 Miuix body1 / MD3 bodyLarge，两边都是
+     * 「刚���上一级」的幅度。
+     */
+    @Composable
+    fun bodyLarge(): TextStyle = when (LocalKedgeStyle.current) {
+        KedgeStyle.Miuix -> MiuixTheme.textStyles.body1
+        KedgeStyle.MD3Exp -> androidx.compose.material3.MaterialTheme.typography.bodyLarge
+    }
+
     /** 辅助类：时间戳、计数、状态标签等次要信息。 */
     @Composable
     fun footnote(): TextStyle = when (LocalKedgeStyle.current) {
