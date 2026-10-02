@@ -2,6 +2,21 @@
 
 All notable changes to Kedge will be documented in this file.
 
+## 0.1.2 - 2026-10-02
+
+### Added
+
+- Added `KedgeEditDialog`: dual-style dispatch for the multi-field edit dialog. MD3Exp delegates to Khromia `EditDialog`; Miuix uses a private implementation built on Miuix `WindowDialog`, `KedgeTextField`, `KedgeButton`/`KedgeTextButton` and Miuix's own corner-radius tokens (no MD3 28dp/16dp leakage). `EditFieldConfig` and the validation rules are reused from Khromia rather than redefined, so the two styles share one set of rules. Requires Khromia 1.6.5.
+- Added `KedgeSegmentedListSlots`: a slot-based grouped list whose container only owns the group shape — the item gap comes from the caller and each item's `content` receives its own `(index, count)` among visible items so the caller can compute corner radii itself. Intended for hosts whose corner-radius policy is user-configurable, and for rows that need text fields, error colors or custom type scales that `KedgeSegmentedListItem`'s `String` parameters cannot express. The container deliberately does not add a surface, so rows that already carry their own background and shape are not double-wrapped. `KedgeSegmentedList` is unchanged.
+
+### Changed
+
+- `KedgeOptionItem`'s `onClick` is now nullable. Passing `null` marks a pure-information row: it is not clickable and has no press feedback in either style, instead of silently bouncing on press. Requires Khromia 1.6.5.
+
+### Notes
+
+- `material3` is pinned to `1.5.0-alpha29` and must stay in sync with KhatKit and Khromia; a mismatch compiles fine but throws `NoSuchMethodError` at runtime.
+
 ## 0.1.1 - 2026-09-12
 
 ### Added
