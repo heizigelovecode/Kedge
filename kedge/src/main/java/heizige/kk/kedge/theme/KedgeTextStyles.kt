@@ -42,6 +42,23 @@ object KedgeTextStyles {
         KedgeStyle.MD3Exp -> androidx.compose.material3.MaterialTheme.typography.headlineMedium
     }
 
+    /**
+     * 顶栏标题：普通（非 large）顶栏的标题，以及**顶栏里 morph 成搜索框的那个输入框**。
+     *
+     * 输入框必须与同一个顶栏的标题用这个 token，否则两边字号不等——这是用户
+     * 反复反馈过的点。历史上两边各取各的默认 `LocalTextStyle`：标题在
+     * `LargeFlexibleTopAppBar` 里拿到 displaySmall，输入框继承调用点的父级，
+     * MD3 下差 8sp。
+     *
+     * MD3 取 `titleLarge`（与 `TopAppBar` 的标题默认一致）；Miuix 取 `title2`，
+     * 比 `SmallTopAppBar` 默认的 `title3` 大一号。
+     */
+    @Composable
+    fun topBarTitle(): TextStyle = when (LocalKedgeStyle.current) {
+        KedgeStyle.Miuix -> MiuixTheme.textStyles.title2
+        KedgeStyle.MD3Exp -> androidx.compose.material3.MaterialTheme.typography.titleLarge
+    }
+
     /** 正文类：摘要、说明文字、列表项副文案。 */
     @Composable
     fun body(): TextStyle = when (LocalKedgeStyle.current) {
