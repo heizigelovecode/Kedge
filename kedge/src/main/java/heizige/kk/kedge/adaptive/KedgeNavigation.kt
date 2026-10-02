@@ -32,6 +32,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -94,16 +95,24 @@ fun KedgeTopAppBar(
     actions: @Composable RowScope.() -> Unit = {},
     titleContent: (@Composable () -> Unit)? = null,
     scrollBehavior: top.yukonga.miuix.kmp.basic.ScrollBehavior? = null,
+    /**
+     * MD3 配色，**只在 MD3Exp 分支生效**。收下它是为了让挂在毛玻璃上的调用点
+     * （聊天抽屉的顶栏）能把 containerColor 设成 Transparent，让毛玻璃透出来；
+     * Miuix 分支的底色由 `KedgeMiuixCustomTitleBar` 按 backdrop 自己决定。
+     */
+    colors: TopAppBarColors? = null,
 ) {
     when (LocalKedgeStyle.current) {
         KedgeStyle.MD3Exp -> {
             val actualTitle = titleContent ?: { Text(title) }
+            val actualColors = colors ?: TopAppBarDefaults.topAppBarColors()
             if (centered) {
                 CenterAlignedTopAppBar(
                     title = actualTitle,
                     modifier = modifier,
                     navigationIcon = navigationIcon,
                     actions = actions,
+                    colors = actualColors,
                 )
             } else {
                 TopAppBar(
@@ -111,6 +120,7 @@ fun KedgeTopAppBar(
                     modifier = modifier,
                     navigationIcon = navigationIcon,
                     actions = actions,
+                    colors = actualColors,
                 )
             }
         }
