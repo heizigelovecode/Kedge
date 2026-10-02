@@ -66,6 +66,10 @@ fun KedgeOptionItem(
             } else {
                 backgroundColor
             },
+            // 必须把调用点算好的 shape 传下去：CardGroup 会按 index/count 给出
+            // 「首项只圆上边、末项只圆下边、中间项直角」，不传就会退回 KedgeCard
+            // 的默认全圆角，同组选项就散成一张张独立卡片了。
+            shape = shape,
             onClick = onClick,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
