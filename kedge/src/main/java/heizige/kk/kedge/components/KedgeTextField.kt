@@ -566,6 +566,8 @@ fun KedgeTextFieldWithState(
     readOnly: Boolean = false,
     enabled: Boolean = true,
     lineLimits: androidx.compose.foundation.text.input.TextFieldLineLimits? = null,
+    /** 占位文案。Miuix 的 TextField 只收字符串占位，所以这里也用 String。 */
+    placeholder: String? = null,
     /** 文字样式：MD3 原样应用；Miuix 只取字号/字重，其余用 Miuix 的样式。 */
     textStyle: androidx.compose.ui.text.TextStyle? = null,
     shape: androidx.compose.ui.graphics.Shape = KedgeTextFieldDefaults.Md3Shape,
@@ -579,6 +581,7 @@ fun KedgeTextFieldWithState(
             readOnly = readOnly,
             enabled = enabled,
             lineLimits = lineLimits ?: androidx.compose.foundation.text.input.TextFieldLineLimits.SingleLine,
+            placeholder = placeholder?.let { p -> { Text(p) } },
             textStyle = textStyle ?: androidx.compose.material3.LocalTextStyle.current,
             shape = shape,
             colors = colors ?: androidx.compose.material3.TextFieldDefaults.colors(),
@@ -591,6 +594,10 @@ fun KedgeTextFieldWithState(
             enabled = enabled,
             // Miuix 的 lineLimits 是非空参数，没传时按多行处理（编辑器场景）。
             lineLimits = lineLimits ?: androidx.compose.foundation.text.input.TextFieldLineLimits.MultiLine(),
+            // Miuix 的 label 是非空 String，用空串代表"无标签"，再靠
+            // useLabelAsPlaceholder 让它只在空值时显示成占位。
+            label = placeholder.orEmpty(),
+            useLabelAsPlaceholder = placeholder != null,
             textStyle = textStyle ?: MiuixTheme.textStyles.main,
         )
     }
