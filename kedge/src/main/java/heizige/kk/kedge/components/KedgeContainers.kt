@@ -26,12 +26,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import heizige.kk.kedge.theme.KedgeColors
 import heizige.kk.kedge.theme.KedgeStyle
 import heizige.kk.kedge.theme.LocalKedgeStyle
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.CardDefaults as MiuixCardDefaults
 import top.yukonga.miuix.kmp.basic.Surface as MiuixSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+
+/**
+ * Miuix 下「卡片类」表面的默认底色：卡片、设置项、分组。
+ *
+ * Miuix 的设置项（`SwitchPreference` / `ArrowPreference`）本身是**透明**的
+ * （`BasicComponent` 只画内容不画背景），所以设置项看到的底色完全来自外面那层卡片。
+ * 浅色模式下页面底色是 `surface`，而 `surfaceContainer` 与它只差一档明度，
+ * 分组卡片/设置项看着像没画底色（用户反馈：浅色模式「背景色太浅」）。
+ *
+ * 所以浅色模式改用深一档的 `surfaceContainerHigh`；深色模式维持
+ * `surfaceContainer` —— 深色下这两档本来就分得开，再抬一档反而过亮。
+ */
+object KedgeMiuixSurface {
+    /** 卡片 / 设置项的底色。 */
+    val cardContainer: Color
+        @Composable get() = if (KedgeColors.isDark) {
+            MiuixTheme.colorScheme.surfaceContainer
+        } else {
+            MiuixTheme.colorScheme.surfaceContainerHigh
+        }
+}
 
 @Composable
 fun KedgeSurface(
@@ -200,7 +222,7 @@ fun KedgeCard(
                     color != Color.Unspecified -> color
                     colors != null && colors.containerColor != Color.Unspecified ->
                         colors.containerColor
-                    else -> MiuixTheme.colorScheme.surfaceContainer
+                    else -> KedgeMiuixSurface.cardContainer
                 },
                 contentColor = when {
                     contentColor != Color.Unspecified -> contentColor

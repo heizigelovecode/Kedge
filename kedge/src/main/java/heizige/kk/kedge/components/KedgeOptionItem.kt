@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import heizige.kk.kedge.components.KedgeMiuixSurface
+import heizige.kk.kedge.theme.KedgeColors
 import heizige.kk.kedge.theme.KedgeStyle
 import heizige.kk.kedge.theme.LocalKedgeStyle
 import heizige.kk.khromia.components.OptionItem as KhromiaOptionItem
@@ -49,7 +52,14 @@ fun KedgeOptionItem(
             onClick = onClick,
             shape = shape,
             backgroundColor = if (backgroundColor == Color.Unspecified) {
-                androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f)
+                // 设置页浅色模式下页面底色是 surfaceContainer，surfaceVariant 再压
+                // 0.26 透明度后与页面几乎同色，整列看着「没有底色」。浅色改用不透明
+                // 的一档容器色；深色保持原样（深色下 0.26 已经有足够对比）。
+                if (KedgeColors.isDark) {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+                }
             } else backgroundColor,
             leadingContent = leadingContent,
             overlineContent = overlineContent,
@@ -68,7 +78,7 @@ fun KedgeOptionItem(
             // 16 + 16 = 32dp，看着比 KSU 松太多。
             contentPadding = KedgeComponentDefaults.InsideMargin,
             color = if (backgroundColor == Color.Unspecified) {
-                MiuixTheme.colorScheme.surfaceContainer
+                KedgeMiuixSurface.cardContainer
             } else {
                 backgroundColor
             },

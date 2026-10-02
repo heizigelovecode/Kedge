@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import heizige.kk.kedge.components.KedgeMiuixSurface
 import heizige.kk.kedge.components.KedgeRadioButton
 import heizige.kk.kedge.components.KedgeSwitch
 import heizige.kk.kedge.overlays.KedgeDialog
@@ -264,7 +265,7 @@ private fun KedgePreferenceRow(
 ) {
     val isMiuix = LocalKedgeStyle.current == KedgeStyle.Miuix
     val background = if (isMiuix) {
-        MiuixTheme.colorScheme.surfaceContainer
+        KedgeMiuixSurface.cardContainer
     } else {
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f)
     }
