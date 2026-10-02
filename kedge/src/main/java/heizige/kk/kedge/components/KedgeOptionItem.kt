@@ -24,10 +24,16 @@ import heizige.kk.khromia.components.OptionItem as KhromiaOptionItem
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import heizige.kk.kedge.theme.MiuixTextStyleScope
 
-/** 插槽版选项行：MD3Exp 走 Khromia OptionItem，Miuix 走 KedgeCard 行。 */
+/**
+ * 插槽版选项行：MD3Exp 走 Khromia OptionItem，Miuix 走 KedgeCard 行。
+ *
+ * [onClick] 传 `null` 表示纯信息行：两种风格下都不可点，也都没有按压回弹。
+ * 分组里的圆角由**调用点**按 index/count 算好通过 [shape] 传下来（见下方 Miuix
+ * 分支的注释），本组件不猜自己在组里的位置。
+ */
 @Composable
 fun KedgeOptionItem(
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(20.dp),
     backgroundColor: Color = Color.Unspecified,

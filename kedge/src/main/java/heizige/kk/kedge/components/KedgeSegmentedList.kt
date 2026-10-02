@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import heizige.kk.kedge.theme.KedgeStyle
 import heizige.kk.kedge.theme.LocalKedgeStyle
@@ -47,6 +48,63 @@ internal data class SegmentedEntry(
     val visible: Boolean,
     val content: @Composable () -> Unit,
 )
+
+@KedgeSegmentedListDsl
+class KedgeSegmentedListSlotsScope internal constructor() {
+    internal val items = mutableListOf<SegmentedSlotEntry>()
+
+    /**
+     * 追加一项。[content] 收到的是该项在**可见项**里的下标与可见项总数，
+     * 调用点据此自己算圆角（首项只圆上边 / 中间直角 / 末项只圆下边）。
+     */
+    fun item(
+        key: Any? = null,
+        visible: Boolean = true,
+        content: @Composable (index: Int, count: Int) -> Unit,
+    ) {
+        items += SegmentedSlotEntry(key = key ?: items.size, visible = visible, content = content)
+    }
+}
+
+@Immutable
+internal data class SegmentedSlotEntry(
+    val key: Any,
+    val visible: Boolean,
+    val content: @Composable (index: Int, count: Int) -> Unit,
+)
+
+/**
+ * 插槽版分组列表：容器只负责「分组形态」——项间距，以及把 index/count 交给每一项；
+ * 行的渲染与圆角全部由调用点决定。
+ *
+ * 与 [KedgeSegmentedList] 的分工：后者自带 [KedgeSurface] 背景与固定 16dp 圆角，
+ * 只适合 [KedgeSegmentedListItem] 那种标题/摘要都是 String 的固定行。宿主在下面
+ * 两种情况下应该用本组件：
+ *
+ * - 圆角策略要由宿主决定（例如可由用户在设置里改的圆角与间距）；
+ * - 行里要塞输入框、错误色、自定义字阶这类 String 参数表达不了的内容。
+ *
+ * 容器**刻意不叠背景**：行本身多半已经自带底色与圆角（[KedgeOptionItem] 就是），
+ * 再套一层 [KedgeSurface] 会变成两层底色、两层圆角。
+ *
+ * [title] 是插槽而非 String，且**没有项时也会渲染**——空分组仍要显示标题。
+ */
+@Composable
+fun KedgeSegmentedListSlots(
+    modifier: Modifier = Modifier,
+    title: (@Composable () -> Unit)? = null,
+    itemGap: Dp,
+    content: KedgeSegmentedListSlotsScope.() -> Unit,
+) {
+    val scope = KedgeSegmentedListSlotsScope().apply(content)
+    val visibleItems = scope.items.filter { it.visible }
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(itemGap)) {
+        title?.invoke()
+        visibleItems.forEachIndexed { index, entry ->
+            entry.content(index, visibleItems.size)
+        }
+    }
+}
 
 @Composable
 fun KedgeSegmentedList(
