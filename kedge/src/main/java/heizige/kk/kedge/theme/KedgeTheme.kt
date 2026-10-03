@@ -24,6 +24,36 @@ import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
 
 val LocalKedgeStyle = staticCompositionLocalOf { KedgeStyle.MD3Exp }
 
+/**
+ * 静态 Light/Dark 下的 error 槽位，照抄 KernelSU
+ * （`manager/.../ui/component/miuix/WarningCard.kt`）。
+ *
+ * Miuix 自带的静态值不能直接用：
+ * - 浅色 `errorContainer = #FDF6F4` 比页面底色（`surface = #F7F7F7`）还白 →
+ *   错误卡片看着像一块没上色的白板；
+ * - 深色 `errorContainer = #2E0603` 比页面底色（`surface = #000000`）还黑 →
+ *   容器直接消失在背景里。
+ *
+ * KSU 的结论一样：只有动态取色（Monet）时才回落到生成的 `errorContainer`，
+ * 静态主题一律写死成「淡红容器 + 明确的红字」。这里挂进 `ThemeController` 的
+ * `lightColors`/`darkColors`，于是 `MiuixTheme.colorScheme.error*` 以及
+ * `MiuixMaterialThemeBridge` 桥出去的 `MaterialTheme.colorScheme.error*` 一次性对齐。
+ *
+ * 注意：Miuix 的 Monet 分支（`colorsFromSeed`）不读这两个值，动态取色仍走生成色，
+ * 与 KSU 的 `isDynamicColor` 分支行为一致。
+ */
+private val MiuixStaticLightColors = top.yukonga.miuix.kmp.theme.lightColorScheme(
+    error = Color(0xFFF72727),
+    errorContainer = Color(0xFFF8E2E2),
+    onErrorContainer = Color(0xFFF72727),
+)
+
+private val MiuixStaticDarkColors = top.yukonga.miuix.kmp.theme.darkColorScheme(
+    error = Color(0xFFF72727),
+    errorContainer = Color(0xFF310808),
+    onErrorContainer = Color(0xFFF72727),
+)
+
 @Composable
 fun KedgeTheme(
     style: KedgeStyle = KedgeStyle.MD3Exp,
@@ -102,6 +132,9 @@ private fun KedgeMiuixTheme(
     val controller = remember(colorSchemeMode, darkTheme, seedColor) {
         ThemeController(
             colorSchemeMode = colorSchemeMode,
+            // 静态 Light/Dark 的 error 槽位换成 KSU 那组，见文件顶部注释。
+            lightColors = MiuixStaticLightColors,
+            darkColors = MiuixStaticDarkColors,
             keyColor = seedColor,
             colorSpec = ThemeColorSpec.Spec2025,
             // 调色板照搬 KernelSU（ui/theme/MiuixTheme.kt）：默认 TonalSpot。
