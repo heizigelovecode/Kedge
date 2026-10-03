@@ -38,12 +38,17 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  *
  * 选中状态由调用方持有（[SegmentedItem.selected]），本组件只负责呈现与回调。
  *
+ * @param fillWidth `true`（默认）时各项等分整行宽度，`false` 时按文案宽度排布并左对齐。
+ *   同一个表单里如果单选和多选混用，等分和按宽度两种宽度并排会显得很不齐 —— 把单选也
+ *   改成 `false` 即可与 [KedgeMultiChoiceSegmentedRow] 的观感统一。
+ *
  * 用途：设置页里的成组互斥选项（颜色模式、TTS/ASR、提供商类型等）。
  */
 @Composable
 fun KedgeSingleChoiceSegmentedRow(
     items: List<SegmentedItem>,
     modifier: Modifier = Modifier,
+    fillWidth: Boolean = true,
 ) {
     when (LocalKedgeStyle.current) {
         KedgeStyle.MD3Exp -> SingleChoiceSegmentedRow(
@@ -54,6 +59,7 @@ fun KedgeSingleChoiceSegmentedRow(
         KedgeStyle.Miuix -> MiuixSingleChoiceSegmentedRow(
             items = items,
             modifier = modifier,
+            fillWidth = fillWidth,
         )
     }
 }
@@ -84,6 +90,7 @@ fun KedgeMultiChoiceSegmentedRow(
 private fun MiuixSingleChoiceSegmentedRow(
     items: List<SegmentedItem>,
     modifier: Modifier = Modifier,
+    fillWidth: Boolean = true,
 ) {
     Row(
         modifier = modifier
@@ -95,7 +102,11 @@ private fun MiuixSingleChoiceSegmentedRow(
             MiuixSegmentedPill(
                 item = item,
                 onClick = item.onClick,
-                modifier = Modifier.weight(1f),
+                modifier = if (fillWidth) {
+                    Modifier.weight(1f)
+                } else {
+                    Modifier.weight(1f, fill = false)
+                },
             )
         }
     }
