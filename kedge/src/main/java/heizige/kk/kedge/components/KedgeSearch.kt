@@ -102,6 +102,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.SearchBarDefaults as MiuixSearchBarDefaults
+import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -281,7 +282,14 @@ private fun KedgeMiuixSearchInputField(
             },
         enabled = enabled,
         singleLine = true,
-        textStyle = MiuixTheme.textStyles.main.copy(fontWeight = FontWeight.Medium),
+        textStyle = MiuixTheme.textStyles.main.copy(
+            fontWeight = FontWeight.Medium,
+            // `textStyles.main` 没有 color（TextStyles.kt 全篇没有 color）。Miuix 原版
+            // InputField 会补一刀 `LocalContentColor.current`，这里漏掉的话
+            // BasicTextField 拿到的是 Unspecified，实际画出来恒为黑色 —— 暗色模式下
+            // 输入内容变成黑底黑字。
+            color = LocalContentColor.current,
+        ),
         cursorBrush = SolidColor(MiuixTheme.colorScheme.primary),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(
