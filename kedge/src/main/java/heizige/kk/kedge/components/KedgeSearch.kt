@@ -437,7 +437,9 @@ private fun MiuixSearchBarOverlay(
                         }
                     }
                     AnimatedVisibility(
-                        visible = phase == SearchPhase.Expanded,
+                        // KSU 在展开动画开始时就组合取消按钮，让它与搜索框同步从右侧进入。
+                        // 只有完全展开后才允许点击，避免动画期间误触发收起。
+                        visible = phase == SearchPhase.Expanding || phase == SearchPhase.Expanded,
                         enter = KedgeSearchMotion.cancelEnter,
                         exit = KedgeSearchMotion.cancelExit,
                     ) {
