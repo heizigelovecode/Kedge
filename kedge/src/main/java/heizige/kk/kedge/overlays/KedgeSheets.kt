@@ -15,6 +15,8 @@ import heizige.kk.kedge.components.KedgeButton
 import heizige.kk.kedge.components.KedgeTextButton
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -164,10 +166,18 @@ fun KedgePrimaryBottomSheet(
             title = title,
             onDismissRequest = onDismiss,
         ) {
-            Column(modifier = Modifier.imePadding()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
+                    // 确认按钮行原本紧贴 sheet 底边：手势导航条会压住它，三键导航更会直接
+                    // 裁掉下半截（用户截图里「添加」只露出上半）。这里补上安全区内边距。
+                    .navigationBarsPadding()
+                    .padding(bottom = 12.dp),
+            ) {
                 content()
                 if (confirmText != null || dismissText != null) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(12.dp))
                     // 按钮文案是裸 Text，给套上 Miuix 字阶（KSU 的弹层按钮同理）
                     MiuixTextStyleScope(KedgeTextStyles.body()) {
                         Row(
