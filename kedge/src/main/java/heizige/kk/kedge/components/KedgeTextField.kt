@@ -446,11 +446,7 @@ private fun KedgeMiuixTextFieldWithSlots(
                         // surfaceContainerHigh 的块面，不描边。Miuix 默认的
                         // secondaryContainer 在本仓 TonalSpot 配色下偏亮，字和底色
                         // 明度太近（用户截图里是「灰底上的灰字」）。
-                        backgroundColor = if (enabled) {
-                            MiuixTheme.colorScheme.surfaceContainerHigh
-                        } else {
-                            MiuixTheme.colorScheme.surfaceContainer
-                        },
+                        backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
                         labelColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         borderColor = if (isError) {
                             MiuixTheme.colorScheme.error
@@ -569,11 +565,7 @@ private fun KedgeMiuixTextField(
                         // surfaceContainerHigh 的块面，不描边。Miuix 默认的
                         // secondaryContainer 在本仓 TonalSpot 配色下偏亮，字和底色
                         // 明度太近（用户截图里是「灰底上的灰字」）。
-                        backgroundColor = if (enabled) {
-                            MiuixTheme.colorScheme.surfaceContainerHigh
-                        } else {
-                            MiuixTheme.colorScheme.surfaceContainer
-                        },
+                        backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
                         labelColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         borderColor = if (isError) {
                             MiuixTheme.colorScheme.error

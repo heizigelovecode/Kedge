@@ -25,22 +25,28 @@ import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
 val LocalKedgeStyle = staticCompositionLocalOf { KedgeStyle.MD3Exp }
 
 /**
- * 静态 Light/Dark 下的 error 槽位，照抄 KernelSU
- * （`manager/.../ui/component/miuix/WarningCard.kt`）。
+ * 静态 Light/Dark 下 Miuix 自带值不能直接用的几个槽位，一并挂进 [ThemeController]。
  *
- * Miuix 自带的静态值不能直接用：
+ * ## error
  * - 浅色 `errorContainer = #FDF6F4` 比页面底色（`surface = #F7F7F7`）还白 →
  *   错误卡片看着像一块没上色的白板；
  * - 深色 `errorContainer = #2E0603` 比页面底色（`surface = #000000`）还黑 →
  *   容器直接消失在背景里。
  *
- * KSU 的结论一样：只有动态取色（Monet）时才回落到生成的 `errorContainer`，
- * 静态主题一律写死成「淡红容器 + 明确的红字」。这里挂进 `ThemeController` 的
- * `lightColors`/`darkColors`，于是 `MiuixTheme.colorScheme.error*` 以及
- * `MiuixMaterialThemeBridge` 桥出去的 `MaterialTheme.colorScheme.error*` 一次性对齐。
+ * KernelSU（`ui/component/miuix/WarningCard.kt`）的结论一样：只有动态取色（Monet）
+ * 才回落到生成的 `errorContainer`，静态主题一律写死成「淡红容器 + 明确的红字」。
+ *
+ * ## 暗色的 surface 台阶
+ * Miuix 暗色把 `background` / `surfaceVariant` / `surfaceContainer` /
+ * `surfaceContainerHigh` 全压成同一个 `#242424`。而「卡片（`surfaceContainer`）
+ * 里放一个输入框（`surfaceContainerHigh`）」是最常见的组合 —— 两者同色，输入框
+ * 整块糊在卡片上完全看不见。按 Material 3 暗色的做法把台阶拉开。
+ *
+ * 挂进 `lightColors`/`darkColors` 之后，`MiuixTheme.colorScheme.*` 以及
+ * `MiuixMaterialThemeBridge` 桥出去的 `MaterialTheme.colorScheme.*` 一次对齐。
  *
  * 注意：Miuix 的 Monet 分支（`colorsFromSeed`）不读这两个值，动态取色仍走生成色，
- * 与 KSU 的 `isDynamicColor` 分支行为一致。
+ * 与 KernelSU 的 `isDynamicColor` 分支行为一致。
  */
 private val MiuixStaticLightColors = top.yukonga.miuix.kmp.theme.lightColorScheme(
     error = Color(0xFFF72727),
@@ -52,6 +58,9 @@ private val MiuixStaticDarkColors = top.yukonga.miuix.kmp.theme.darkColorScheme(
     error = Color(0xFFF72727),
     errorContainer = Color(0xFF310808),
     onErrorContainer = Color(0xFFF72727),
+    // #242424 → #303030 → #3C3C3C，每档差 12，与 M3 暗色的台阶密度一致。
+    surfaceContainerHigh = Color(0xFF303030),
+    surfaceContainerHighest = Color(0xFF3C3C3C),
 )
 
 @Composable
