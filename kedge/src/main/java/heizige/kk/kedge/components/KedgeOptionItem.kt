@@ -1,11 +1,13 @@
 package heizige.kk.kedge.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -20,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import heizige.kk.kedge.components.KedgeMiuixSurface
-import heizige.kk.kedge.theme.KedgeColors
 import heizige.kk.kedge.theme.KedgeStyle
 import heizige.kk.kedge.theme.LocalKedgeStyle
 import heizige.kk.khromia.components.OptionItem as KhromiaOptionItem
@@ -52,14 +53,12 @@ fun KedgeOptionItem(
             onClick = onClick,
             shape = shape,
             backgroundColor = if (backgroundColor == Color.Unspecified) {
-                // 设置页浅色模式下页面底色是 surfaceContainer，surfaceVariant 再压
-                // 0.26 透明度后与页面几乎同色，整列看着「没有底色」。浅色改用不透明
-                // 的一档容器色；深色保持原样（深色下 0.26 已经有足够对比）。
-                if (KedgeColors.isDark) {
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHigh
-                }
+                // 与 Khromia `OptionItem`（KodeHead / KodeStudio 设置页在用）的默认值
+                // 保持一致：surfaceVariant@0.26，选项行是「淡淡」一层，不与内容抢。
+                // 以前浅色下换成不透明的 surfaceContainerHigh，是因为设置页底色还是
+                // surfaceContainer，0.26 透明度叠上去几乎同色、整列看着没有底色；
+                // 页面底色已改回 surface，那层补丁就不再需要。
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f)
             } else backgroundColor,
             leadingContent = leadingContent,
             overlineContent = overlineContent,
@@ -90,6 +89,12 @@ fun KedgeOptionItem(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (leadingContent != null) {
+                    // 不在这里给图标钉尺寸：KernelSU 的 startAction 是
+                    // `Icon(..., Modifier.padding(end = 6.dp))`，尺寸交给 Miuix
+                    // `Icon` 按 painter 内在尺寸决定（Miuix 只在内在尺寸缺失时才补
+                    // 24dp）。外面再套一层 size() 会把内在尺寸更大的图标压小。
+                    // 这里只补 KSU 那 6dp 间距；调用点自带 padding 的会变成 12dp，
+                    // 与 KSU 一致（KSU 也是 startAction 里自己带 padding）。
                     leadingContent()
                     Spacer(modifier = Modifier.width(KedgeComponentDefaults.ActionSpacing))
                 }
@@ -125,8 +130,9 @@ internal object KedgeComponentDefaults {
     /** 卡片内边距，对齐库的 `BasicComponentDefaults.InsideMargin`。 */
     val InsideMargin = PaddingValues(16.dp)
 
-    /** start/center/end 三栏之间的间隔。 */
-    val ActionSpacing = 8.dp
+    /** start/center/end 三栏之间的间隔。KernelSU 用的是图标自身 padding(end = 6.dp)。 */
+    val ActionSpacing = 6.dp
+
 
     /** 最小高度，对齐库的 `BasicComponent` heightIn(min = 56.dp)。 */
     val MinHeight = 56.dp

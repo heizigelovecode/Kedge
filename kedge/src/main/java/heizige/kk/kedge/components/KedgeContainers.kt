@@ -16,7 +16,9 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults as MdCardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface as MdSurface
+import androidx.compose.material3.LocalContentColor as MdLocalContentColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,17 +44,14 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 浅色模式下页面底色是 `surface`，而 `surfaceContainer` 与它只差一档明度，
  * 分组卡片/设置项看着像没画底色（用户反馈：浅色模式「背景色太浅」）。
  *
- * 所以浅色模式改用深一档的 `surfaceContainerHigh`；深色模式维持
- * `surfaceContainer` —— 深色下这两档本来就分得开，再抬一档反而过亮。
+ * 浅色模式曾改成深一档的 `surfaceContainerHigh`，但那就不是 KernelSU 的观感了
+ * （KSU 全程只用 `surfaceContainer`）：TonalSpot 调色板下 surfaceContainer
+ * 与 surface 本来就有足够明度差，按 KSU 原文照搬，两种模式统一。
  */
 object KedgeMiuixSurface {
     /** 卡片 / 设置项的底色。 */
     val cardContainer: Color
-        @Composable get() = if (KedgeColors.isDark) {
-            MiuixTheme.colorScheme.surfaceContainer
-        } else {
-            MiuixTheme.colorScheme.surfaceContainerHigh
-        }
+        @Composable get() = MiuixTheme.colorScheme.surfaceContainer
 }
 
 @Composable
@@ -106,17 +105,27 @@ fun KedgeSurface(
             )
         }
 
-        KedgeStyle.Miuix -> MiuixSurface(
-            modifier = modifier.then(
-                if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier
-            ),
-            color = if (color == Color.Unspecified) MiuixTheme.colorScheme.surface else color,
-            contentColor = if (contentColor == Color.Unspecified) MiuixTheme.colorScheme.onSurface else contentColor,
-            shape = shape ?: RoundedCornerShape(16.dp),
-            shadowElevation = shadowElevation,
-            border = border,
-            content = content,
-        )
+        KedgeStyle.Miuix -> {
+            val surfaceContentColor =
+                if (contentColor == Color.Unspecified) MiuixTheme.colorScheme.onSurface else contentColor
+            MiuixSurface(
+                modifier = modifier.then(
+                    if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier
+                ),
+                color = if (color == Color.Unspecified) MiuixTheme.colorScheme.surface else color,
+                contentColor = surfaceContentColor,
+                shape = shape ?: RoundedCornerShape(16.dp),
+                shadowElevation = shadowElevation,
+                border = border,
+            ) {
+                // Miuix 的 Surface 只 provide Miuix 的 LocalContentColor，而业务代码里
+                // 全是 material3 的 Text（读 MD3 那个）。这里同步一份，否则容器里的
+                // 文字在深色模式下会是默认黑字。
+                CompositionLocalProvider(MdLocalContentColor provides surfaceContentColor) {
+                    content()
+                }
+            }
+        }
     }
 }
 
@@ -200,6 +209,20 @@ fun KedgeCard(
             else -> 0.dp
         }
 
+        val cardContentColor = when {
+            contentColor != Color.Unspecified -> contentColor
+            colors != null && colors.contentColor != Color.Unspecified -> colors.contentColor
+            else -> MiuixTheme.colorScheme.onSurfaceContainer
+        }
+        val cardColors = MiuixCardDefaults.defaultColors(
+            color = when {
+                color != Color.Unspecified -> color
+                colors != null && colors.containerColor != Color.Unspecified -> colors.containerColor
+                else -> KedgeMiuixSurface.cardContainer
+            },
+            contentColor = cardContentColor,
+        )
+
         MiuixCard(
             modifier = modifier.then(
                 if (shape != null && uniformRadius == null) Modifier.clip(shape) else Modifier
@@ -217,21 +240,20 @@ fun KedgeCard(
             // 来表达"错误态 / 选中态"这类语义（原先只喂 MD3 分支，Miuix 下被静默
             // 丢弃，于是禁用项和正常项长得一样）。CardColors 的默认值是
             // Color.Unspecified，只有调用方真的指定了才覆盖。
-            colors = MiuixCardDefaults.defaultColors(
-                color = when {
-                    color != Color.Unspecified -> color
-                    colors != null && colors.containerColor != Color.Unspecified ->
-                        colors.containerColor
-                    else -> KedgeMiuixSurface.cardContainer
-                },
-                contentColor = when {
-                    contentColor != Color.Unspecified -> contentColor
-                    colors != null && colors.contentColor != Color.Unspecified ->
-                        colors.contentColor
-                    else -> Color.Unspecified
-                },
-            ),
-            content = content,
+            //
+            // contentColor 缺省**不能**传 Unspecified：Miuix 的 Card 会
+            // `LocalContentColor provides colors.contentColor`，Unspecified 一路传到
+            // 文字着色（textStyle.color ?: LocalContentColor），最后当黑色画 —— 于是
+            // 浅色模式看着正常，深色模式下卡片里的标题/摘要全变成黑字（用户报「写死的
+            // 颜色、看不清」）。这里补回 Miuix 自己的默认值 onSurfaceContainer。
+            colors = cardColors,
+            content = {
+                // 同 KedgeSurface：Miuix Card 只 provide Miuix 的 LocalContentColor，
+                // 业务代码的 material3 Text 读不到，必须同步一份给 MD3 那个。
+                CompositionLocalProvider(MdLocalContentColor provides cardContentColor) {
+                    content()
+                }
+            },
         )
         }
     }

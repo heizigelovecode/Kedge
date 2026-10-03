@@ -104,7 +104,10 @@ private fun KedgeMiuixTheme(
             colorSchemeMode = colorSchemeMode,
             keyColor = seedColor,
             colorSpec = ThemeColorSpec.Spec2025,
-            paletteStyle = ThemePaletteStyle.Expressive,
+            // 调色板照搬 KernelSU（ui/theme/MiuixTheme.kt）：默认 TonalSpot。
+            // 之前这里写的是 Expressive —— 它的浅色模式 surfaceContainer 几乎贴着
+            // surface，于是卡片看着像没画底色（用户报「设置项背景太浅、颜色发灰」）。
+            paletteStyle = ThemePaletteStyle.TonalSpot,
             isDark = darkTheme,
         )
     }

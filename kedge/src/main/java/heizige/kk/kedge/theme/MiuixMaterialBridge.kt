@@ -125,10 +125,15 @@ internal fun MiuixMaterialThemeBridge(
         // 与卡片/圆角/配色不搭——这类调用点有上千处，逐个改不现实。
         typography = miuixTypography(),
     ) {
-        // Miuix 下必须显式给回弹效果：不提供时 LocalOverscrollFactory 没有
-        // provider，LazyColumn 的 overscroll 变成"没有效果"，列表滚到头就是
-        // 硬停，手感很别扭。这里用 Miuix 自带的 MiuixOverscrollFactory。
+        // 关键：LocalContentColor 也必须桥接。material3 的 `Text(...)` 在没有显式
+        // color 时读的是 **MD3 的** LocalContentColor，默认值是纯黑；而 Miuix 的
+        // Card/Surface 只 provide **Miuix 的** LocalContentColor，桥接不到两边去。
+        // 结果就是：Miuix 页面里凡是「没写 color 的 Text」全是黑字，深色模式下
+        // 卡片标题/摘要直接糊掉（浅色模式因为底色浅，看不出来）。
+        // 容器级（卡片、弹层）的同款 provide 在 KedgeCard / KedgeSurface 的
+        // Miuix 分支里补。
         CompositionLocalProvider(
+            androidx.compose.material3.LocalContentColor provides MiuixTheme.colorScheme.onBackground,
             LocalOverscrollFactory provides MiuixOverscrollFactory,
             content = content,
         )

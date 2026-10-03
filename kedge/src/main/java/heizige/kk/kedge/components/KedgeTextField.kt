@@ -28,6 +28,7 @@ import heizige.kk.kedge.theme.LocalKedgeStyle
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextField as MiuixTextField
 import top.yukonga.miuix.kmp.basic.TextFieldDefaults as MiuixTextFieldDefaults
+import top.yukonga.miuix.kmp.theme.LocalContentColor as MiuixLocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 object KedgeTextFieldDefaults {
@@ -379,8 +380,12 @@ private fun KedgeMiuixTextFieldWithSlots(
     }
     @Suppress("UNUSED_EXPRESSION")
     placeholder
+    // 照搬 KernelSU（ui/component/miuix/EditText.kt + SuperSearchBar.kt）：
+    // 输入框是 surfaceContainerHigh 的块面，文字用 onSurface。之前这里用
+    // onSecondaryContainer，在本仓 TonalSpot 配色下与 secondaryContainer 底色
+    // 明度太近，深色模式下看着是「一块灰底上的灰字」（用户截图反馈）。
     val fieldContentColor = if (enabled) {
-        MiuixTheme.colorScheme.onSecondaryContainer
+        MiuixTheme.colorScheme.onSurface
     } else {
         MiuixTheme.colorScheme.disabledOnSurface
     }
@@ -394,12 +399,29 @@ private fun KedgeMiuixTextFieldWithSlots(
             Spacer(modifier = Modifier.height(4.dp))
         }
         Box(modifier = Modifier.fillMaxWidth()) {
-            CompositionLocalProvider(MdLocalContentColor provides fieldContentColor) {
+            CompositionLocalProvider(
+                // Miuix 的 TextField 自己 provide 的是 **Miuix 的** LocalContentColor；
+                // 只给 MD3 那个等于没给（之前的 onSurface 改动因此看不到效果）。
+                // 两个都 provide：内部文字走 Miuix 的，MD3 插槽（如 trailing icon
+                // 里的 Text）走 MD3 的。
+                MdLocalContentColor provides fieldContentColor,
+                MiuixLocalContentColor provides fieldContentColor,
+            ) {
                 MiuixTextField(
                     value = value,
                     onValueChange = onValueChange,
                     modifier = Modifier.fillMaxWidth(),
                     colors = MiuixTextFieldDefaults.textFieldColors(
+                        // 底色照搬 KernelSU（ui/component/miuix/EditText.kt）：输入框是
+                        // surfaceContainerHigh 的块面，不描边。Miuix 默认的
+                        // secondaryContainer 在本仓 TonalSpot 配色下偏亮，字和底色
+                        // 明度太近（用户截图里是「灰底上的灰字」）。
+                        backgroundColor = if (enabled) {
+                            MiuixTheme.colorScheme.surfaceContainerHigh
+                        } else {
+                            MiuixTheme.colorScheme.surfaceContainer
+                        },
+                        labelColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         borderColor = if (isError) {
                             MiuixTheme.colorScheme.error
                         } else {
@@ -486,20 +508,41 @@ private fun KedgeMiuixTextField(
         else -> placeholder.orEmpty()
     }
     val helperColor = if (isError) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onSurfaceVariantSummary
+    // 照搬 KernelSU（ui/component/miuix/EditText.kt + SuperSearchBar.kt）：
+    // 输入框是 surfaceContainerHigh 的块面，文字用 onSurface。之前这里用
+    // onSecondaryContainer，在本仓 TonalSpot 配色下与 secondaryContainer 底色
+    // 明度太近，深色模式下看着是「一块灰底上的灰字」（用户截图反馈）。
     val fieldContentColor = if (enabled) {
-        MiuixTheme.colorScheme.onSecondaryContainer
+        MiuixTheme.colorScheme.onSurface
     } else {
         MiuixTheme.colorScheme.disabledOnSurface
     }
 
     Column(modifier = modifier) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            CompositionLocalProvider(MdLocalContentColor provides fieldContentColor) {
+            CompositionLocalProvider(
+                // Miuix 的 TextField 自己 provide 的是 **Miuix 的** LocalContentColor；
+                // 只给 MD3 那个等于没给（之前的 onSurface 改动因此看不到效果）。
+                // 两个都 provide：内部文字走 Miuix 的，MD3 插槽（如 trailing icon
+                // 里的 Text）走 MD3 的。
+                MdLocalContentColor provides fieldContentColor,
+                MiuixLocalContentColor provides fieldContentColor,
+            ) {
                 MiuixTextField(
                     value = value,
                     onValueChange = onValueChange,
                     modifier = Modifier.fillMaxWidth(),
                     colors = MiuixTextFieldDefaults.textFieldColors(
+                        // 底色照搬 KernelSU（ui/component/miuix/EditText.kt）：输入框是
+                        // surfaceContainerHigh 的块面，不描边。Miuix 默认的
+                        // secondaryContainer 在本仓 TonalSpot 配色下偏亮，字和底色
+                        // 明度太近（用户截图里是「灰底上的灰字」）。
+                        backgroundColor = if (enabled) {
+                            MiuixTheme.colorScheme.surfaceContainerHigh
+                        } else {
+                            MiuixTheme.colorScheme.surfaceContainer
+                        },
+                        labelColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         borderColor = if (isError) {
                             MiuixTheme.colorScheme.error
                         } else {
