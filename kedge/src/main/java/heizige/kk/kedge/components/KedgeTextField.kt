@@ -17,8 +17,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.input.VisualTransformation
@@ -33,6 +38,28 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 object KedgeTextFieldDefaults {
     val Md3Shape: Shape = RoundedCornerShape(16.dp)
+}
+
+/**
+ * 把外部的 `String` 受控值接成 [TextFieldValue]，**保住 IME 合成区与光标位置**。
+ *
+ * 为什么必须持有 [TextFieldValue] 而不是直接传字符串：
+ * Compose 的 `BasicTextField(value: String, …)` 重载每次重组都会用
+ * `TextFieldValue(value)` 重建一个新值，而这个构造函数的默认值是
+ * `selection = TextRange(value.length)`、**合成区为 null**。中文输入法打字期间 IME 侧
+ * 一直维护着拼音合成区，每敲一个字母就丢一次：拼音和已经上屏的字会一起进框，光标还被
+ * 复位到开头（用户实测反馈）。
+ *
+ * 所以打字过程中原样收下 IME 给的 [TextFieldValue]（合成区、光标都保住），只有外部
+ * 真的换成了另一个字符串（清空、换模型、重置表单）时才重建。
+ */
+@Composable
+internal fun rememberKedgeTextFieldValue(value: String): MutableState<TextFieldValue> {
+    val state = remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    if (state.value.text != value) {
+        state.value = TextFieldValue(value, TextRange(value.length))
+    }
+    return state
 }
 
 /**
@@ -390,6 +417,9 @@ private fun KedgeMiuixTextFieldWithSlots(
         MiuixTheme.colorScheme.disabledOnSurface
     }
     val showLabelInside = label != null && value.isEmpty()
+    // 持有 TextFieldValue 而不是直接传字符串，否则中文输入法的拼音合成区每次按键都被
+    // 重组冲掉（详见 [rememberKedgeTextFieldValue]）。
+    val textFieldValue = rememberKedgeTextFieldValue(value)
     Column(modifier = modifier) {
         // label 有值时**不**再渲染到框外面：Miuix 原生 TextField 的 label 是画在
         // 输入框边框内的，悬在外面会变成「标题 + 一个空灰框」，和 KernelSU 差很远。
@@ -408,8 +438,8 @@ private fun KedgeMiuixTextFieldWithSlots(
                 MiuixLocalContentColor provides fieldContentColor,
             ) {
                 MiuixTextField(
-                    value = value,
-                    onValueChange = onValueChange,
+                    value = textFieldValue.value,
+                    onValueChange = { textFieldValue.value = it; onValueChange(it.text) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = MiuixTextFieldDefaults.textFieldColors(
                         // 底色照搬 KernelSU（ui/component/miuix/EditText.kt）：输入框是
@@ -517,6 +547,8 @@ private fun KedgeMiuixTextField(
     } else {
         MiuixTheme.colorScheme.disabledOnSurface
     }
+    // 同 [KedgeMiuixTextFieldWithSlots]：传 String 会丢 IME 合成区。
+    val textFieldValue = rememberKedgeTextFieldValue(value)
 
     Column(modifier = modifier) {
         Box(modifier = Modifier.fillMaxWidth()) {
