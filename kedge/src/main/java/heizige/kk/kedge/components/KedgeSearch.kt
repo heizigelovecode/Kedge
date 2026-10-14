@@ -1,5 +1,6 @@
 package heizige.kk.kedge.components
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -55,6 +56,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar as MdSearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
@@ -565,10 +567,20 @@ private fun MiuixSearchBarOverlay(
     showResultsWhenEmpty: Boolean,
 ) {
     val density = LocalDensity.current
+    val localHost = LocalKedgeSearchLocalHost.current
+    // sheet 内（调用点 provide 了局部槽）：展开层挂在调用点自己的 Box 里，于是
+    //  - 顶部不再减状态栏 inset（sheet 内部没有状态栏那一层）；
+    //  - IME 内边距不再自己加（sheet 内容槽已经 `imePadding()`，再加就是双份）；
+    //  - 药丸的窗口 y 换算成相对局部槽的 y，收起动画才会落在槽内。
+    val inline = localHost != null
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+    val imeBottom = if (inline) 0.dp else WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+    val expandedBarTop = if (inline) 0.dp else statusBarTop + KedgeSearchMotion.ExpandedBarTopInset
     val overlayState = LocalKedgeSearchOverlayState.current
     val phaseState = remember { MiuixSearchPhaseState() }
+    // 折叠位 y：根部槽用窗口坐标（≡ 相对槽顶，槽就在窗口顶），局部槽要减掉槽顶的窗口 y。
+    val collapsedBarY: Dp = localHost?.let { phaseState.collapsedBarY - it.topInWindow }
+        ?: phaseState.collapsedBarY
     val currentOnActiveChange by rememberUpdatedState(onActiveChange)
     // `active` 必须活读，不能直接闭包进 overlayContent：那个 lambda 只在 phase 变化时
     // 重新 attach（见下方 DisposableEffect），外面单独把 active 置 false 的话，挂在槽里的
@@ -643,8 +655,7 @@ private fun MiuixSearchBarOverlay(
         if (!phaseState.beginPredictiveCollapse()) return@PredictiveBackHandler
         // 手势可能在补间跑一半时开始，从当前位置接着走。
         val fromBar = barTopPadding.value
-        val toBar = phaseState.collapsedBarY
-        val expandedBarTop = statusBarTop + KedgeSearchMotion.ExpandedBarTopInset
+        val toBar = collapsedBarY
         try {
             backEvents.collect { event ->
                 val progress = event.progress.coerceIn(0f, 1f)
@@ -676,7 +687,7 @@ private fun MiuixSearchBarOverlay(
         when (phaseState.phase) {
             SearchPhase.Expanding -> {
                 // 起点钉在折叠药丸的实测 y（KSU 的 `max(offsetY, 0.dp)`），再滑到状态栏下方。
-                barTopPadding.snapTo(phaseState.collapsedBarY)
+                barTopPadding.snapTo(collapsedBarY)
                 // 揭幕与位移同时起跑，**两者都走完**再进 Expanded。
                 // 这里必须 join：早先用 `launch { 揭幕 }` + `位移.animateTo()`，位移 300ms
                 // 走完就调 onExpandComplete()，phase 的 LaunchedEffect key 一变，整棵协程树
@@ -687,7 +698,7 @@ private fun MiuixSearchBarOverlay(
                         scrimProgress.animateTo(1f, KedgeSearchMotion.scrimWipe)
                     }
                     barTopPadding.animateTo(
-                        statusBarTop + KedgeSearchMotion.ExpandedBarTopInset,
+                        expandedBarTop,
                         KedgeSearchMotion.bar,
                     )
                     wipe.join()
@@ -703,7 +714,7 @@ private fun MiuixSearchBarOverlay(
                     // join，否则揭幕会被相位切换取消掉。
                     coroutineScope {
                         val wipe = launch { scrimProgress.animateTo(0f, KedgeSearchMotion.scrimWipe) }
-                        barTopPadding.animateTo(phaseState.collapsedBarY, KedgeSearchMotion.bar)
+                        barTopPadding.animateTo(collapsedBarY, KedgeSearchMotion.bar)
                         wipe.join()
                     }
                     phaseState.onCollapseComplete()
@@ -715,7 +726,7 @@ private fun MiuixSearchBarOverlay(
             SearchPhase.Collapsed -> {
                 // 回到折叠态：药丸停在折叠位、遮罩完全撤掉。等价于 KSU 那个
                 // `animateDpAsState(target = max(offsetY, 0.dp))` 持续跟随。
-                barTopPadding.snapTo(phaseState.collapsedBarY)
+                barTopPadding.snapTo(collapsedBarY)
                 scrimProgress.snapTo(0f)
             }
 
@@ -723,9 +734,11 @@ private fun MiuixSearchBarOverlay(
         }
     }
 
-    // 全屏层挂到根节点的 overlay 槽（同 window，位置同 KSU 的 popupHost）。
+    // 全屏层挂到槽里：sheet 内优先挂调用点自己 provide 的 [LocalKedgeSearchLocalHost]（子树内，
+    // 天然被 sheet 的边界约束），没有局部槽时才挂根部 [KedgeSearchOverlayLayer]（页面级，同 window
+    // 位置同 KSU 的 popupHost）。
     // 内容全部经 rememberUpdatedState 取，所以这个 lambda 身份稳定，只在挂/摘时换。
-    if (overlayState != null) {
+    if (localHost != null || overlayState != null) {
         val phase = phaseState.phase
         val valueState = rememberUpdatedState(value)
         val onValueChangeState = rememberUpdatedState(onValueChange)
@@ -887,11 +900,17 @@ private fun MiuixSearchBarOverlay(
             }
         }
 
-        // 挂 / 摘。离开页面（导航走、弹窗关掉）时 onDispose 会把全屏层摘掉，
-        // 否则它会带着旧的 phaseState 一直留在根节点上 —— 换页后搜索框还在。
-        DisposableEffect(overlayState, phase) {
-            overlayState.attach(overlayContent)
-            onDispose { overlayState.detach(overlayContent) }
+        // 挂 / 摘。离开页面（导航走、弹窗关掉）时 onDispose 会把层摘掉，
+        // 否则它会带着旧的 phaseState 一直留在槽上 —— 换页后搜索框还在。
+        DisposableEffect(localHost, overlayState, phase) {
+            val host = localHost
+            if (host != null) {
+                host.attach(overlayContent)
+                onDispose { host.detach(overlayContent) }
+            } else {
+                overlayState!!.attach(overlayContent)
+                onDispose { overlayState.detach(overlayContent) }
+            }
         }
     }
 
@@ -1014,23 +1033,106 @@ private fun Md3SearchBarBridge(
         inputField = inputField,
         modifier = Modifier.fillMaxWidth(),
     )
-    ExpandedFullScreenContainedSearchBar(
-        state = searchBarState,
-        inputField = inputField,
-        windowInsets = {
-            SearchBarDefaults.fullScreenWindowInsets.only(
-                WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
-            )
-        },
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding(),
+
+    val localHost = LocalKedgeSearchLocalHost.current
+    if (localHost == null) {
+        // 页面级：原样走 material3 的全屏 Dialog（`ExpandedFullScreenContainedSearchBar`
+        // 内部是 `Dialog`，`ExpandedFullScreenSearchBarImpl(state, dialogProperties, …)`）。
+        ExpandedFullScreenContainedSearchBar(
+            state = searchBarState,
+            inputField = inputField,
+            windowInsets = {
+                SearchBarDefaults.fullScreenWindowInsets.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+                )
+            },
         ) {
-            // 同 Miuix 分支：关键词为空时不摊开列表。
-            if (showResultsWhenEmpty || value.isNotBlank()) {
-                expandedContent()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding(),
+            ) {
+                // 同 Miuix 分支：关键词为空时不摊开列表。
+                if (showResultsWhenEmpty || value.isNotBlank()) {
+                    expandedContent()
+                }
+            }
+        }
+    } else {
+        // sheet 内：展开层挂到调用点自己 provide 的局部槽里（不建窗口、不出 sheet）。
+        // 全部经 State 活读，所以下面这个 lambda 身份稳定：收起动画期间层不会因为
+        // 重组被换成新实例（换实例会让 AnimatedVisibility 的 exit 直接跳过）。
+        val inputFieldState = rememberUpdatedState(inputField)
+        val expandedContentState = rememberUpdatedState(expandedContent)
+        val expandedState = rememberUpdatedState(
+            searchBarState.targetValue != SearchBarValue.Collapsed,
+        )
+        val showResultsState = rememberUpdatedState(showResultsWhenEmpty || value.isNotBlank())
+        val inlineLayer: @Composable () -> Unit = {
+            Md3SearchBarInlineLayer(
+                expanded = expandedState.value,
+                inputField = inputFieldState.value,
+                showResults = showResultsState.value,
+                content = expandedContentState.value,
+            )
+        }
+        DisposableEffect(localHost) {
+            localHost.attach(inlineLayer)
+            onDispose { localHost.detach(inlineLayer) }
+        }
+        // Dialog 版的返回键收起由 `ExpandedFullScreenContainedSearchBar` 内部处理；局部层
+        // 自己接一个。它在 sheet 内容子树里注册，晚于 sheet 自己的返回处理 ⇒ 展开时优先收起
+        // 搜索，而不是把整个 sheet 关掉。
+        BackHandler(enabled = expandedState.value) {
+            scope.launch { searchBarState.animateToCollapsed() }
+        }
+    }
+}
+
+/**
+ * MD3 分支在 **sheet 内**的展开层。视觉与 Dialog 版等价（顶部输入框 + 结果区），差别只在于
+ * 它画在调用点自己的 [KedgeSearchLocalLayer] 里：一个普通 `Box`，因此天然被 sheet 的边界
+ * 约束，不再盖住整屏。
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Md3SearchBarInlineLayer(
+    expanded: Boolean,
+    inputField: @Composable () -> Unit,
+    showResults: Boolean,
+    content: @Composable () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = expanded,
+        enter = KedgeSearchMotion.contentFadeIn,
+        exit = KedgeSearchMotion.contentFadeOut,
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // 不透明底：把 sheet 里原来的内容盖住（Dialog 版是整屏 Surface）。同 Miuix 分支，
+            // 遮罩放**下面**当兄弟节点，于是命中测试先落到上面的输入框/结果区，剩下才被吃掉
+            // —— 展开时 sheet 背后的控件不会被误点。
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                awaitPointerEvent().changes.forEach { it.consume() }
+                            }
+                        }
+                    },
+            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                inputField()
+                AnimatedVisibility(
+                    visible = showResults,
+                    enter = KedgeSearchMotion.contentFadeIn,
+                    exit = KedgeSearchMotion.contentFadeOut,
+                ) {
+                    // 结果区在 sheet 内滚动（调用点传进来的就是 LazyColumn / 可滚动列表）。
+                    Box(modifier = Modifier.fillMaxSize()) { content() }
+                }
             }
         }
     }
